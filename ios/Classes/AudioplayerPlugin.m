@@ -36,7 +36,6 @@ FlutterMethodChannel *_channel;
 
 
 + (void)registerWithRegistrar:(NSObject<FlutterPluginRegistrar>*)registrar {
-  //  [SwiftAudioplayerPlugin registerWithRegistrar:registrar];
   FlutterMethodChannel* channel = [FlutterMethodChannel
                                    methodChannelWithName:CHANNEL_NAME
                                    binaryMessenger:[registrar messenger]];
