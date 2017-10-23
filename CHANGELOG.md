@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.0
+
+- merge PR from [johanhenselmans](https://github.com/johanhenselmans) to switch iOS to ObjectiveC
+- merge PR from [oaks](https://github.com/oakes) to add the seek feature 
+
 ## 0.2.0
 
 - support for local files
