@@ -67,6 +67,8 @@ FlutterMethodChannel *_channel;
                                 NSString *url = call.arguments[@"url"];
                                 if (url == nil)
                                   result(0);
+                                if (call.arguments[@"isLocal"]==nil)
+                                  result(0);
                                 int isLocal = [call.arguments[@"isLocal"]intValue] ;
                                 NSLog(@"isLocal: %d %@",isLocal, call.arguments[@"isLocal"] );
                                 [self togglePlay:url isLocal:isLocal];
@@ -105,7 +107,7 @@ FlutterMethodChannel *_channel;
 -(void) togglePlay: (NSString*) url isLocal: (int) isLocal
 {
   NSLog(@"togglePlay %@",url );
-  if (url != lastUrl) {
+  if (![url isEqualToString:lastUrl]) {
     [playerItem removeObserver:self
                     forKeyPath:@"player.currentItem.status"];
     
