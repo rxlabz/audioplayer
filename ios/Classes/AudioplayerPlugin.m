@@ -151,6 +151,10 @@ NSMutableSet *observers;
     
     // removeOnSoundComplete
     // [[ NSNotificationCenter defaultCenter] removeObserver:self];
+    for (id ob in observers)
+      [[NSNotificationCenter defaultCenter] removeObserver:ob];
+    observers = nil;
+
     if( isLocal ){
       playerItem = [[ AVPlayerItem alloc]initWithURL:[NSURL fileURLWithPath:url]];
     } else {
