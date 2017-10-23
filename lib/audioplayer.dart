@@ -30,6 +30,8 @@ class AudioPlayer {
 
   Future<int> stop() => _channel.invokeMethod('stop');
 
+  Future<int> seek(double seconds) => _channel.invokeMethod('seek', seconds);
+
   void setDurationHandler(TimeChangeHandler handler) {
     durationHandler = handler;
   }
@@ -47,7 +49,7 @@ class AudioPlayer {
   }
 
   Future platformCallHandler(MethodCall call) async {
-    print("_platformCallHandler call ${call.method} ${call.arguments}");
+    //    print("_platformCallHandler call ${call.method} ${call.arguments}");
     switch (call.method) {
       case "audio.onDuration":
         final duration = new Duration(milliseconds: call.arguments);
