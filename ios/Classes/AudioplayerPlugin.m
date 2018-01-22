@@ -13,6 +13,7 @@ static AVPlayerItem *playerItem;
 @interface AudioplayerPlugin()
 -(void) pause;
 -(void) stop;
+-(void) mute: (BOOL) muted;
 -(void) seek: (CMTime) time;
 -(void) onSoundComplete;
 -(void) updateDuration;
@@ -81,6 +82,13 @@ FlutterMethodChannel *_channel;
                               ^{
                                 NSLog(@"stop");
                                 [self stop];
+                              },
+                            @"mute":
+                              ^{
+                                NSLog(@"mute");
+								// TODO
+                                // BOOL muted = call.arguments[@"muted"];
+                                [self mute: true];
                               },
                             @"seek":
                               ^{
@@ -200,6 +208,9 @@ FlutterMethodChannel *_channel;
   }
 }
 
+-(void) mute: (bool) muted {
+    player.muted = muted;
+}
 
 -(void) seek: (CMTime) time {
   [playerItem seekToTime:time];

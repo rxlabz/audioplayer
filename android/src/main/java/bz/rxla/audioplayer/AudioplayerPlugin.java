@@ -15,12 +15,16 @@ import io.flutter.plugin.common.PluginRegistry.Registrar;
 import java.io.IOException;
 import java.util.HashMap;
 
+import android.content.Context;
+import android.os.Build;
+
 /**
  * AudioplayerPlugin
  */
 public class AudioplayerPlugin implements MethodCallHandler {
   private final MethodChannel channel;
   private Activity activity;
+  private static AudioManager am;
 
   final Handler handler = new Handler();
 
@@ -35,6 +39,9 @@ public class AudioplayerPlugin implements MethodCallHandler {
     this.activity = activity;
     this.channel = channel;
     this.channel.setMethodCallHandler(this);
+    if(AudioplayerPlugin.am == null) {
+      AudioplayerPlugin.am = (AudioManager)activity.getApplicationContext().getSystemService(Context.AUDIO_SERVICE);
+    }
   }
 
   @Override
@@ -53,10 +60,22 @@ public class AudioplayerPlugin implements MethodCallHandler {
       double position = call.arguments();
       seek(position);
       response.success(1);
+    } else if (call.method.equals("mute")) {
+      Boolean muted = call.arguments();
+      mute(muted);
     } else {
       response.notImplemented();
     }
   }
+ 
+ private void mute(Boolean muted) {
+  if(AudioplayerPlugin.am == null) return;
+  if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+    AudioplayerPlugin.am.adjustStreamVolume(AudioManager.STREAM_MUSIC, muted ? AudioManager.ADJUST_MUTE : AudioManager.ADJUST_UNMUTE, 0);
+  } else {
+	  AudioplayerPlugin.am.setStreamMute(AudioManager.STREAM_MUSIC, muted);
+  }
+ }
 
   private void seek(double position) {
     mediaPlayer.seekTo((int) (position * 1000));
@@ -88,17 +107,18 @@ public class AudioplayerPlugin implements MethodCallHandler {
         Log.d("AUDIO", "invalid DataSource");
       }
 
-      try {
-        mediaPlayer.prepare();
-      } catch (IOException e) {
-        Log.d("AUDIO", "media prepare ERROR");
-        e.printStackTrace();
-      }
+      mediaPlayer.prepareAsync();
     }
 
-    channel.invokeMethod("audio.onDuration", mediaPlayer.getDuration());
+    mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener(){
+      @Override
+      public void onPrepared(MediaPlayer mp) {
+        channel.invokeMethod("audio.onDuration", mediaPlayer.getDuration());
 
-    mediaPlayer.start();
+        mediaPlayer.start();
+        channel.invokeMethod("audio.onStart", true);
+      }
+    });
 
     mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener(){
       @Override
@@ -107,6 +127,15 @@ public class AudioplayerPlugin implements MethodCallHandler {
         channel.invokeMethod("audio.onComplete", true);
       }
     });
+
+    mediaPlayer.setOnErrorListener(new MediaPlayer.OnErrorListener(){
+      @Override
+      public boolean onError(MediaPlayer mp, int what, int extra) {
+        channel.invokeMethod("audio.onError", String.format("{\"what\":%d,\"extra\":%d}", what, extra));
+        return true;
+      }
+    });
+
 
     handler.post(sendData);
 

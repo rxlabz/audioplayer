@@ -12,6 +12,7 @@ class AudioPlayer {
 
   TimeChangeHandler durationHandler;
   TimeChangeHandler positionHandler;
+  VoidCallback startHandler;
   VoidCallback completionHandler;
   ErrorHandler errorHandler;
 
@@ -30,6 +31,8 @@ class AudioPlayer {
 
   Future<int> stop() => _channel.invokeMethod('stop');
 
+  Future<int> mute(bool muted) => _channel.invokeMethod('mute', muted);
+
   Future<int> seek(double seconds) => _channel.invokeMethod('seek', seconds);
 
   void setDurationHandler(TimeChangeHandler handler) {
@@ -38,6 +41,11 @@ class AudioPlayer {
 
   void setPositionHandler(TimeChangeHandler handler) {
     positionHandler = handler;
+  }
+
+
+  void setStartHandler(VoidCallback callback) {
+    startHandler = callback;
   }
 
   void setCompletionHandler(VoidCallback callback) {
@@ -61,6 +69,11 @@ class AudioPlayer {
       case "audio.onCurrentPosition":
         if (positionHandler != null) {
           positionHandler(new Duration(milliseconds: call.arguments));
+        }
+        break;
+      case "audio.onStart":
+        if (startHandler != null) {
+          startHandler();
         }
         break;
       case "audio.onComplete":
