@@ -73,7 +73,7 @@ public class AudioplayerPlugin implements MethodCallHandler {
   if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
     AudioplayerPlugin.am.adjustStreamVolume(AudioManager.STREAM_MUSIC, muted ? AudioManager.ADJUST_MUTE : AudioManager.ADJUST_UNMUTE, 0);
   } else {
-	  AudioplayerPlugin.am.setStreamMute(AudioManager.STREAM_MUSIC, muted);
+    AudioplayerPlugin.am.setStreamMute(AudioManager.STREAM_MUSIC, muted);
   }
  }
 
