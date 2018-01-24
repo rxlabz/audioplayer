@@ -109,6 +109,11 @@ public class AudioplayerPlugin implements MethodCallHandler {
       }
 
       mediaPlayer.prepareAsync();
+    } else {
+      channel.invokeMethod("audio.onDuration", mediaPlayer.getDuration());
+
+      mediaPlayer.start();
+      channel.invokeMethod("audio.onStart", true);
     }
 
     mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener(){
