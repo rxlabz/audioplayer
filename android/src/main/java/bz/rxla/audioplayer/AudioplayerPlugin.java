@@ -63,6 +63,7 @@ public class AudioplayerPlugin implements MethodCallHandler {
     } else if (call.method.equals("mute")) {
       Boolean muted = call.arguments();
       mute(muted);
+      response.success(1);
     } else {
       response.notImplemented();
     }
