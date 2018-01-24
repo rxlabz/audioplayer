@@ -86,19 +86,12 @@ FlutterMethodChannel *_channel;
                             @"mute":
                               ^{
                                 NSLog(@"mute");
-								// TODO
-                                // BOOL muted = call.arguments[@"muted"];
-                                [self mute: true];
+                                [self mute: [call.arguments boolValue]];
                               },
                             @"seek":
                               ^{
                                 NSLog(@"seek");
-                                if(!call.arguments[@"seconds"]){
-                                  result(0);
-                                } else {
-                                  double seconds = [call.arguments[@"seconds"] doubleValue];
-                                  [self seek: CMTimeMakeWithSeconds(seconds,1)];
-                                }
+                                [self seek: CMTimeMakeWithSeconds([call.arguments doubleValue], 1)];
                               }
                             };
   
