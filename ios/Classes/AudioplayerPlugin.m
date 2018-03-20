@@ -226,7 +226,7 @@ FlutterMethodChannel *_channel;
     if ([[player currentItem] status ] == AVPlayerItemStatusReadyToPlay) {
       [self updateDuration];
     } else if ([[player currentItem] status ] == AVPlayerItemStatusFailed) {
-      [_channel invokeMethod:@"audio.onError" arguments:@"AVPlayerItemStatus.failed" ];
+      [_channel invokeMethod:@"audio.onError" arguments:@[(player.currentItem.error.localizedDescription)] ];
     }
   } else {
     // Any unrecognized context must belong to super
