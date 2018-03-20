@@ -53,12 +53,10 @@ class _AudioAppState extends State<AudioApp> {
     audioPlayer = new AudioPlayer();
 
     audioPlayer.setDurationHandler((d) => setState(() {
-          print('_AudioAppState.setDurationHandler => d ${d}');
           duration = d;
         }));
 
     audioPlayer.setPositionHandler((p) => setState(() {
-          print('_AudioAppState.setPositionHandler => p ${p}');
           position = p;
         }));
 
@@ -70,7 +68,6 @@ class _AudioAppState extends State<AudioApp> {
     });
 
     audioPlayer.setErrorHandler((msg) {
-      print('audioPlayer error : $msg');
       setState(() {
         playerState = PlayerState.stopped;
         duration = new Duration(seconds: 0);
@@ -81,10 +78,14 @@ class _AudioAppState extends State<AudioApp> {
 
   Future play() async {
     final result = await audioPlayer.play(kUrl);
-    if (result == 1) setState(() => playerState = PlayerState.playing);
+    if (result == 1)
+      setState(() {
+        print('_AudioAppState.play... PlayerState.playing');
+        playerState = PlayerState.playing;
+      });
   }
 
-  Future _playLocal() async{
+  Future _playLocal() async {
     final result = await audioPlayer.play(localFilePath, isLocal: true);
     if (result == 1) setState(() => playerState = PlayerState.playing);
   }
@@ -102,7 +103,6 @@ class _AudioAppState extends State<AudioApp> {
         position = new Duration();
       });
   }
-
 
   Future mute(bool muted) async {
     final result = await audioPlayer.mute(muted);
@@ -135,7 +135,7 @@ class _AudioAppState extends State<AudioApp> {
   Future _loadFile() async {
     final bytes = await _loadFileBytes(kUrl,
         onError: (Exception exception) =>
-            print('_MyHomePageState._loadVideo => exception ${exception}'));
+            print('_loadFile => exception ${exception}'));
 
     final dir = await getApplicationDocumentsDirectory();
     final file = new File('${dir.path}/audio.mp3');
@@ -153,76 +153,91 @@ class _AudioAppState extends State<AudioApp> {
         child: new Material(
             elevation: 2.0,
             color: Colors.grey[200],
-            child: new Column(children: [
-              new Material(
-                  child: new Container(
-                      padding: new EdgeInsets.all(16.0),
-                      child:
-                          new Column(mainAxisSize: MainAxisSize.min, children: [
-                        new Row(mainAxisSize: MainAxisSize.min, children: [
-                          new IconButton(
-                              onPressed: isPlaying ? null : () => play(),
-                              iconSize: 64.0,
-                              icon: new Icon(Icons.play_arrow),
-                              color: Colors.cyan),
-                          new IconButton(
-                              onPressed: isPlaying ? () => pause() : null,
-                              iconSize: 64.0,
-                              icon: new Icon(Icons.pause),
-                              color: Colors.cyan),
-                          new IconButton(
-                              onPressed:
-                                  isPlaying || isPaused ? () => stop() : null,
-                              iconSize: 64.0,
-                              icon: new Icon(Icons.stop),
-                              color: Colors.cyan),
-                          new IconButton(
-                              onPressed:
-                                  () => mute(true),
-                              icon: new Icon(Icons.headset_off),
-                              color: Colors.cyan),
-                          new IconButton(
-                              onPressed:
-                                  () => mute(false),
-                              icon: new Icon(Icons.headset),
-                              color: Colors.cyan),
-                        ]),
-                        new Row(mainAxisSize: MainAxisSize.min, children: [
-                          new Padding(
-                              padding: new EdgeInsets.all(12.0),
-                              child: new Stack(children: [
-                                new CircularProgressIndicator(
-                                    value: 1.0,
-                                    valueColor: new AlwaysStoppedAnimation(
-                                        Colors.grey[300])),
-                                new CircularProgressIndicator(
-                                  value: position != null &&
-                                          position.inMilliseconds > 0
-                                      ? position.inMilliseconds /
-                                          duration.inMilliseconds
-                                      : 0.0,
-                                  valueColor:
-                                      new AlwaysStoppedAnimation(Colors.cyan),
-                                ),
-                              ])),
-                          new Text(
-                              position != null
-                                  ? "${positionText ?? ''} / ${durationText ?? ''}"
-                                  : duration != null ? durationText : '',
-                              style: new TextStyle(fontSize: 24.0))
-                        ])
-                      ]))),
-              localFilePath != null ? new Text(localFilePath) : new Container(),
-              new Row(children: [
-                new RaisedButton(
-                  onPressed: () => _loadFile(),
-                  child: new Text('Download'),
-                ),
-                new RaisedButton(
-                  onPressed: () => _playLocal(),
-                  child: new Text('play local'),
-                ),
-              ])
-            ])));
+            child: new Center(
+              child: new Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    new Material(child: _buildPlayer()),
+                    localFilePath != null
+                        ? new Text(localFilePath)
+                        : new Container(),
+                    new Row(children: [
+                      new RaisedButton(
+                        onPressed: () => _loadFile(),
+                        child: new Text('Download'),
+                      ),
+                      new RaisedButton(
+                        onPressed: () => _playLocal(),
+                        child: new Text('play local'),
+                      ),
+                    ])
+                  ]),
+            )));
   }
+
+  Widget _buildPlayer() => new Container(
+      padding: new EdgeInsets.all(16.0),
+      child: new Column(mainAxisSize: MainAxisSize.min, children: [
+        new Row(mainAxisSize: MainAxisSize.min, children: [
+          new IconButton(
+              onPressed: isPlaying ? null : () => play(),
+              iconSize: 64.0,
+              icon: new Icon(Icons.play_arrow),
+              color: Colors.cyan),
+          new IconButton(
+              onPressed: isPlaying ? () => pause() : null,
+              iconSize: 64.0,
+              icon: new Icon(Icons.pause),
+              color: Colors.cyan),
+          new IconButton(
+              onPressed: isPlaying || isPaused ? () => stop() : null,
+              iconSize: 64.0,
+              icon: new Icon(Icons.stop),
+              color: Colors.cyan),
+        ]),
+        duration == null
+            ? new Container()
+            : new Slider(
+                value: position?.inMilliseconds?.toDouble() ?? 0,
+                onChanged: (double value) =>
+                    audioPlayer.seek((value / 1000).roundToDouble()),
+                min: 0.0,
+                max: duration.inMilliseconds.toDouble()),
+        new Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: <Widget>[
+            new IconButton(
+                onPressed: () => mute(true),
+                icon: new Icon(Icons.headset_off),
+                color: Colors.cyan),
+            new IconButton(
+                onPressed: () => mute(false),
+                icon: new Icon(Icons.headset),
+                color: Colors.cyan),
+          ],
+        ),
+        new Row(mainAxisSize: MainAxisSize.min, children: [
+          new Padding(
+              padding: new EdgeInsets.all(12.0),
+              child: new Stack(children: [
+                new CircularProgressIndicator(
+                    value: 1.0,
+                    valueColor: new AlwaysStoppedAnimation(Colors.grey[300])),
+                new CircularProgressIndicator(
+                  value: position != null && position.inMilliseconds > 0
+                      ? (position?.inMilliseconds?.toDouble() ?? 0.0) /
+                          (duration?.inMilliseconds?.toDouble() ?? 0.0)
+                      : 0.0,
+                  valueColor: new AlwaysStoppedAnimation(Colors.cyan),
+                  backgroundColor: Colors.yellow,
+                ),
+              ])),
+          new Text(
+              position != null
+                  ? "${positionText ?? ''} / ${durationText ?? ''}"
+                  : duration != null ? durationText : '',
+              style: new TextStyle(fontSize: 24.0))
+        ])
+      ]));
 }

@@ -7,8 +7,8 @@ typedef void TimeChangeHandler(Duration duration);
 typedef void ErrorHandler(String message);
 
 class AudioPlayer {
-  static const MethodChannel _channel =
-      const MethodChannel('bz.rxla.flutter/audio');
+  final MethodChannel channel =
+      new MethodChannel('bz.rxla.flutter/audio');
 
   TimeChangeHandler durationHandler;
   TimeChangeHandler positionHandler;
@@ -20,20 +20,20 @@ class AudioPlayer {
   //ValueNotifier<Duration> durationNotifier;
 
   AudioPlayer() {
-    _channel.setMethodCallHandler(platformCallHandler);
+    channel.setMethodCallHandler(platformCallHandler);
     //durationNotifier = new ValueNotifier(new Duration());
   }
 
-  Future<int> play(String url, {bool isLocal: false}) =>
-      _channel.invokeMethod('play', {"url": url, "isLocal": isLocal});
+  Future<dynamic> play(String url, {bool isLocal: false}) =>
+      channel.invokeMethod('play', {"url": url, "isLocal": isLocal});
 
-  Future<int> pause() => _channel.invokeMethod('pause');
+  Future<dynamic> pause() => channel.invokeMethod('pause');
 
-  Future<int> stop() => _channel.invokeMethod('stop');
+  Future<dynamic> stop() => channel.invokeMethod('stop');
 
-  Future<int> mute(bool muted) => _channel.invokeMethod('mute', muted);
+  Future<dynamic> mute(bool muted) => channel.invokeMethod('mute', muted);
 
-  Future<int> seek(double seconds) => _channel.invokeMethod('seek', seconds);
+  Future<dynamic> seek(double seconds) => channel.invokeMethod('seek', seconds);
 
   void setDurationHandler(TimeChangeHandler handler) {
     durationHandler = handler;
