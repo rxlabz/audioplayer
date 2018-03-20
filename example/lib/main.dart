@@ -162,16 +162,21 @@ class _AudioAppState extends State<AudioApp> {
                     localFilePath != null
                         ? new Text(localFilePath)
                         : new Container(),
-                    new Row(children: [
-                      new RaisedButton(
-                        onPressed: () => _loadFile(),
-                        child: new Text('Download'),
-                      ),
-                      new RaisedButton(
-                        onPressed: () => _playLocal(),
-                        child: new Text('play local'),
-                      ),
-                    ])
+                    new Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: new Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                        new RaisedButton(
+                          onPressed: () => _loadFile(),
+                          child: new Text('Download'),
+                        ),
+                        new RaisedButton(
+                          onPressed: () => _playLocal(),
+                          child: new Text('play local'),
+                        ),
+                      ]),
+                    )
                   ]),
             )));
   }

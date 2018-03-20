@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.4.0
+
+- Feat : merge PR from [mindon](https://github.com/mindon) with mute methods and various improvements
+- fixes Future<int> errors woth --preview-dart2 
+- Example : add a slider to demonstrate the seek feature
+
 ## 0.3.0
 
 - merge PR from [johanhenselmans](https://github.com/johanhenselmans) to switch iOS to ObjectiveC
