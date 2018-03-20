@@ -41,6 +41,8 @@ class _AudioAppState extends State<AudioApp> {
   get positionText =>
       position != null ? position.toString().split('.').first : '';
 
+  bool isMuted = false;
+
   @override
   void initState() {
     super.initState();
@@ -98,6 +100,15 @@ class _AudioAppState extends State<AudioApp> {
       setState(() {
         playerState = PlayerState.stopped;
         position = new Duration();
+      });
+  }
+
+
+  Future mute(bool muted) async {
+    final result = await audioPlayer.mute(muted);
+    if (result == 1)
+      setState(() {
+        isMuted = muted;
       });
   }
 
@@ -164,6 +175,16 @@ class _AudioAppState extends State<AudioApp> {
                                   isPlaying || isPaused ? () => stop() : null,
                               iconSize: 64.0,
                               icon: new Icon(Icons.stop),
+                              color: Colors.cyan),
+                          new IconButton(
+                              onPressed:
+                                  () => mute(true),
+                              icon: new Icon(Icons.headset_off),
+                              color: Colors.cyan),
+                          new IconButton(
+                              onPressed:
+                                  () => mute(false),
+                              icon: new Icon(Icons.headset),
                               color: Colors.cyan),
                         ]),
                         new Row(mainAxisSize: MainAxisSize.min, children: [
