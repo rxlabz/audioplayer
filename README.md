@@ -16,7 +16,7 @@ A Flutter audio plugin (ObjC/Java) to play remote or local audio files
   - [Android](https://developer.android.com/guide/topics/media/media-formats.html)
   - [iOS](http://www.techotopia.com/index.php/Playing_Audio_on_iOS_8_using_AVAudioPlayer#Supported_Audio_Formats)
 
-![screenshot](https://github.com/rxlabz/audioplayer/blob/master/screenshot.png?raw=true)
+![screenshot](https://www.evernote.com/shard/s1/sh/c9e2e0dc-4e1b-4797-b23f-2bdf0f6f3387/d1138680d3b4bdcd/res/1afa2507-2df2-42ef-a840-d7f3519f5cb3/skitch.png?resizeSmall&width=320)
 
 ## Usage
 
