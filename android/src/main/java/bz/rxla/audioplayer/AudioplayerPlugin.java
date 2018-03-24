@@ -64,11 +64,20 @@ public class AudioplayerPlugin implements MethodCallHandler {
       Boolean muted = call.arguments();
       mute(muted);
       response.success(1);
+    } else if (call.method.equals("setVolume")) {
+      int volume = call.arguments();
+      setVolume(volume);
     } else {
       response.notImplemented();
     }
   }
- 
+
+  private void setVolume(int volume) {
+    if (AudioplayerPlugin.am == null) return;
+
+    AudioplayerPlugin.am.setStreamVolume(AudioManager.STREAM_MUSIC, volume, 0);
+}
+
  private void mute(Boolean muted) {
   if(AudioplayerPlugin.am == null) return;
   if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
