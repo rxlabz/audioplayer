@@ -165,17 +165,17 @@ class _AudioAppState extends State<AudioApp> {
                     new Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: new Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                        new RaisedButton(
-                          onPressed: () => _loadFile(),
-                          child: new Text('Download'),
-                        ),
-                        new RaisedButton(
-                          onPressed: () => _playLocal(),
-                          child: new Text('play local'),
-                        ),
-                      ]),
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            new RaisedButton(
+                              onPressed: () => _loadFile(),
+                              child: new Text('Download'),
+                            ),
+                            new RaisedButton(
+                              onPressed: () => _playLocal(),
+                              child: new Text('play local'),
+                            ),
+                          ]),
                     )
                   ]),
             )));
@@ -204,7 +204,7 @@ class _AudioAppState extends State<AudioApp> {
         duration == null
             ? new Container()
             : new Slider(
-                value: position?.inMilliseconds?.toDouble() ?? 0,
+                value: position?.inMilliseconds?.toDouble() ?? 0.0,
                 onChanged: (double value) =>
                     audioPlayer.seek((value / 1000).roundToDouble()),
                 min: 0.0,

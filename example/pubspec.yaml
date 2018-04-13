@@ -7,6 +7,7 @@ dependencies:
   path_provider:
   audioplayer:
     path: ../
+  http: "^0.11.3+16"
 
 flutter:
 
