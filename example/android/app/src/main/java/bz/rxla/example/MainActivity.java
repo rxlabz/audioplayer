@@ -1,4 +1,4 @@
-package bz.rxla.audioplayer_example;
+package bz.rxla.example;
 
 import android.os.Bundle;
 
