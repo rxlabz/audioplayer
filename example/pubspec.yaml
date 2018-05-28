@@ -9,7 +9,13 @@ dependencies:
     path: ../
   http: "^0.11.3+16"
 
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
 flutter:
+  assets:
+    - audio/sample.m4a
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
