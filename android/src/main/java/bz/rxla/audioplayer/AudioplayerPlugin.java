@@ -1,15 +1,17 @@
 package bz.rxla.audioplayer;
 
 import android.app.Activity;
+import android.content.res.AssetFileDescriptor;
+import android.content.res.AssetManager;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.Handler;
 import android.util.Log;
-import io.flutter.app.FlutterActivity;
+
 import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
-import io.flutter.plugin.common.MethodChannel.Result;
 import io.flutter.plugin.common.MethodCall;
+import io.flutter.plugin.common.PluginRegistry;
 import io.flutter.plugin.common.PluginRegistry.Registrar;
 
 import java.io.IOException;
@@ -23,20 +25,20 @@ import android.os.Build;
  */
 public class AudioplayerPlugin implements MethodCallHandler {
   private final MethodChannel channel;
-  private Activity activity;
   private static AudioManager am;
 
-  final Handler handler = new Handler();
+  private final Handler handler = new Handler();
 
-  MediaPlayer mediaPlayer;
+  private MediaPlayer mediaPlayer;
+  private PluginRegistry.Registrar registrar;
 
   public static void registerWith(Registrar registrar) {
     final MethodChannel channel = new MethodChannel(registrar.messenger(), "bz.rxla.flutter/audio");
-    channel.setMethodCallHandler(new AudioplayerPlugin(registrar.activity(), channel));
+    channel.setMethodCallHandler(new AudioplayerPlugin(registrar.activity(), channel, registrar));
   }
 
-  private AudioplayerPlugin(Activity activity, MethodChannel channel) {
-    this.activity = activity;
+  private AudioplayerPlugin(Activity activity, MethodChannel channel, PluginRegistry.Registrar registrar) {
+    this.registrar = registrar;
     this.channel = channel;
     this.channel.setMethodCallHandler(this);
     if(AudioplayerPlugin.am == null) {
@@ -46,26 +48,45 @@ public class AudioplayerPlugin implements MethodCallHandler {
 
   @Override
   public void onMethodCall(MethodCall call, MethodChannel.Result response) {
-    if (call.method.equals("play")) {
-      String url = ((HashMap) call.arguments()).get("url").toString();
-      Boolean resPlay = play(url);
-      response.success(1);
-    } else if (call.method.equals("pause")) {
-      pause();
-      response.success(1);
-    } else if (call.method.equals("stop")) {
-      stop();
-      response.success(1);
-    } else if (call.method.equals("seek")) {
-      double position = call.arguments();
-      seek(position);
-      response.success(1);
-    } else if (call.method.equals("mute")) {
-      Boolean muted = call.arguments();
-      mute(muted);
-      response.success(1);
-    } else {
-      response.notImplemented();
+    switch (call.method) {
+      case "playAsset":
+        String path = ((HashMap) call.arguments()).get("path").toString();
+        AssetManager assetManager = registrar.context().getAssets();
+        String key = registrar.lookupKeyForAsset(path);
+        try {
+          AssetFileDescriptor afd = assetManager.openFd(key);
+          playAssetFileDescriptor(afd);
+          response.success(1);
+        } catch (IOException e) {
+          response.error("AudioPlayerError", "unable to read audio file from asset path", null);
+        }
+        break;
+      case "play":
+        String url = ((HashMap) call.arguments()).get("url").toString();
+        Boolean resPlay = playUrl(url);
+        response.success(1);
+        break;
+      case "pause":
+        pause();
+        response.success(1);
+        break;
+      case "stop":
+        stop();
+        response.success(1);
+        break;
+      case "seek":
+        double position = call.arguments();
+        seek(position);
+        response.success(1);
+        break;
+      case "mute":
+        Boolean muted = call.arguments();
+        mute(muted);
+        response.success(1);
+        break;
+      default:
+        response.notImplemented();
+        break;
     }
   }
  
@@ -96,7 +117,7 @@ public class AudioplayerPlugin implements MethodCallHandler {
     handler.removeCallbacks(sendData);
   }
 
-  private Boolean play(String url) {
+  private Boolean playUrl(String url) {
     if (mediaPlayer == null) {
       mediaPlayer = new MediaPlayer();
       mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
@@ -115,6 +136,34 @@ public class AudioplayerPlugin implements MethodCallHandler {
       mediaPlayer.start();
       channel.invokeMethod("audio.onStart", true);
     }
+    return attachToMediaPlayerEvents();
+  }
+
+  private Boolean playAssetFileDescriptor(AssetFileDescriptor afd) {
+    if (mediaPlayer == null) {
+      mediaPlayer = new MediaPlayer();
+      mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+
+      try {
+        mediaPlayer.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
+        afd.close();
+//        mediaPlayer.prepare();
+      } catch (IOException e) {
+        e.printStackTrace();
+        Log.d("AUDIO", "invalid DataSource");
+      }
+//      mediaPlayer.start();
+      mediaPlayer.prepareAsync();
+    } else {
+      channel.invokeMethod("audio.onDuration", mediaPlayer.getDuration());
+
+      mediaPlayer.start();
+      channel.invokeMethod("audio.onStart", true);
+    }
+    return attachToMediaPlayerEvents();
+  }
+
+  private Boolean attachToMediaPlayerEvents() {
 
     mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener(){
       @Override
@@ -141,7 +190,6 @@ public class AudioplayerPlugin implements MethodCallHandler {
         return true;
       }
     });
-
 
     handler.post(sendData);
 

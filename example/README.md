@@ -62,6 +62,22 @@ Future stop() async {
 
 ```
 
+Optionally, to play audio files included as flutter assets:
+-  add the file paths to `pubspec.yaml`
+```yaml
+flutter:
+  assets:
+    - audio/sample.m4a
+```
+-  use `playAsset()` method:
+```dart
+Future _playAsset() async {
+  final result = await audioPlayer.playAsset("audio/sample.m4a");
+  if (result == 1) setState(() => playerState = PlayerState.playing);
+}
+```
+-  use other player methods as documented
+
 ### duration, position, complete, error (temporary api) 
 
 The dart part of the plugin listen for platform calls :

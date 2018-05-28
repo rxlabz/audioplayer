@@ -9,6 +9,11 @@ static FlutterMethodChannel *channel;
 static AVPlayer *player;
 static AVPlayerItem *playerItem;
 
+typedef enum {
+  kRemote,
+  kLocal,
+  kAsset
+} AudioAssetType;
 
 @interface AudioplayerPlugin()
 -(void) pause;
@@ -34,9 +39,11 @@ BOOL isPlaying = false;
 NSMutableSet *observers;
 NSMutableSet *timeobservers;
 FlutterMethodChannel *_channel;
+NSObject<FlutterPluginRegistrar> *_registrar;
 
 
 + (void)registerWithRegistrar:(NSObject<FlutterPluginRegistrar>*)registrar {
+  _registrar = registrar;
   FlutterMethodChannel* channel = [FlutterMethodChannel
                                    methodChannelWithName:CHANNEL_NAME
                                    binaryMessenger:[registrar messenger]];
@@ -57,10 +64,19 @@ FlutterMethodChannel *_channel;
 - (void)handleMethodCall:(FlutterMethodCall*)call result:(FlutterResult)result {
   NSLog(@"iOS => call %@",call.method);
   
-  typedef void (^CaseBlock)();
+  typedef void (^CaseBlock)(void);
   
   // Squint and this looks like a proper switch!
   NSDictionary *methods = @{
+                            @"playAsset":
+                              ^{
+                                NSLog(@"playAsset");
+                                NSString *path = call.arguments[@"path"];
+                                if (path == nil) {
+                                  result(0);
+                                }
+                                [self togglePlay:path type:kAsset];
+                              },
                             @"play":
                               ^{
                                 NSLog(@"play!");
@@ -71,7 +87,8 @@ FlutterMethodChannel *_channel;
                                   result(0);
                                 int isLocal = [call.arguments[@"isLocal"]intValue] ;
                                 NSLog(@"isLocal: %d %@",isLocal, call.arguments[@"isLocal"] );
-                                [self togglePlay:url isLocal:isLocal];
+                                
+                                [self togglePlay:url type:isLocal ? kLocal : kRemote];
                               },
                             @"pause":
                               ^{
@@ -104,7 +121,7 @@ FlutterMethodChannel *_channel;
 }
 
 
--(void) togglePlay: (NSString*) url isLocal: (int) isLocal
+-(void) togglePlay: (NSString*) url type: (AudioAssetType) type
 {
   NSLog(@"togglePlay %@",url );
   if (![url isEqualToString:lastUrl]) {
@@ -116,9 +133,12 @@ FlutterMethodChannel *_channel;
     for (id ob in observers)
       [[NSNotificationCenter defaultCenter] removeObserver:ob];
     observers = nil;
-    
-    if( isLocal ){
+    if( type == kLocal ){
       playerItem = [[ AVPlayerItem alloc]initWithURL:[NSURL fileURLWithPath:url]];
+    } else if (type == kAsset) {
+      NSString* key = [_registrar lookupKeyForAsset:url];
+      NSURL* url = [[NSBundle mainBundle] URLForResource:key withExtension:nil];
+      playerItem = [[ AVPlayerItem alloc]initWithURL:url];
     } else {
       playerItem = [[ AVPlayerItem alloc] initWithURL:[NSURL URLWithString:url ]];
     }
@@ -172,7 +192,7 @@ FlutterMethodChannel *_channel;
   duration = d;
   if(CMTimeGetSeconds(duration)>0){
     NSLog(@"ios -> invokechannel");
-   int mseconds= CMTimeGetSeconds(duration)*1000;
+    int mseconds= CMTimeGetSeconds(duration)*1000;
     [_channel invokeMethod:@"audio.onDuration" arguments:@(mseconds)];
   }
 }
@@ -202,7 +222,7 @@ FlutterMethodChannel *_channel;
 }
 
 -(void) mute: (bool) muted {
-    player.muted = muted;
+  player.muted = muted;
 }
 
 -(void) seek: (CMTime) time {

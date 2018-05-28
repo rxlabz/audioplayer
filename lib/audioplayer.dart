@@ -8,7 +8,7 @@ typedef void ErrorHandler(String message);
 
 class AudioPlayer {
   final MethodChannel channel =
-      new MethodChannel('bz.rxla.flutter/audio');
+  new MethodChannel('bz.rxla.flutter/audio');
 
   TimeChangeHandler durationHandler;
   TimeChangeHandler positionHandler;
@@ -27,12 +27,15 @@ class AudioPlayer {
   Future<dynamic> play(String url, {bool isLocal: false}) =>
       channel.invokeMethod('play', {"url": url, "isLocal": isLocal});
 
+  Future<dynamic> playAsset(String path) =>
+      channel.invokeMethod('playAsset', {"path": path});
+
   Future<dynamic> pause() => channel.invokeMethod('pause');
 
   Future<dynamic> stop() => channel.invokeMethod('stop');
 
   Future<dynamic> mute(bool muted) => channel.invokeMethod('mute', muted);
-
+  
   Future<dynamic> seek(double seconds) => channel.invokeMethod('seek', seconds);
 
   void setDurationHandler(TimeChangeHandler handler) {

@@ -34,10 +34,12 @@ class _AudioAppState extends State<AudioApp> {
   PlayerState playerState = PlayerState.stopped;
 
   get isPlaying => playerState == PlayerState.playing;
+
   get isPaused => playerState == PlayerState.paused;
 
   get durationText =>
       duration != null ? duration.toString().split('.').first : '';
+
   get positionText =>
       position != null ? position.toString().split('.').first : '';
 
@@ -87,6 +89,11 @@ class _AudioAppState extends State<AudioApp> {
 
   Future _playLocal() async {
     final result = await audioPlayer.play(localFilePath, isLocal: true);
+    if (result == 1) setState(() => playerState = PlayerState.playing);
+  }
+
+  Future _playAsset() async {
+    final result = await audioPlayer.playAsset("audio/sample.m4a");
     if (result == 1) setState(() => playerState = PlayerState.playing);
   }
 
@@ -174,6 +181,10 @@ class _AudioAppState extends State<AudioApp> {
                             new RaisedButton(
                               onPressed: () => _playLocal(),
                               child: new Text('play local'),
+                            ),
+                            new RaisedButton(
+                              onPressed: () => _playAsset(),
+                              child: new Text('play asset'),
                             ),
                           ]),
                     )
