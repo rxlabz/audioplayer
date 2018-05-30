@@ -1,6 +1,5 @@
 package bz.rxla.audioplayer;
 
-import android.app.Activity;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.Handler;
@@ -23,7 +22,7 @@ import android.os.Build;
  */
 public class AudioplayerPlugin implements MethodCallHandler {
   private final MethodChannel channel;
-  private Activity activity;
+  private Registrar registrar;
   private static AudioManager am;
 
   final Handler handler = new Handler();
@@ -32,15 +31,15 @@ public class AudioplayerPlugin implements MethodCallHandler {
 
   public static void registerWith(Registrar registrar) {
     final MethodChannel channel = new MethodChannel(registrar.messenger(), "bz.rxla.flutter/audio");
-    channel.setMethodCallHandler(new AudioplayerPlugin(registrar.activity(), channel));
+    channel.setMethodCallHandler(new AudioplayerPlugin(registrar, channel));
   }
 
-  private AudioplayerPlugin(Activity activity, MethodChannel channel) {
-    this.activity = activity;
+  private AudioplayerPlugin(Registrar registrar, MethodChannel channel) {
+    this.registrar = registrar;
     this.channel = channel;
     this.channel.setMethodCallHandler(this);
     if(AudioplayerPlugin.am == null) {
-      AudioplayerPlugin.am = (AudioManager)activity.getApplicationContext().getSystemService(Context.AUDIO_SERVICE);
+      AudioplayerPlugin.am = (AudioManager)registrar.context().getApplicationContext().getSystemService(Context.AUDIO_SERVICE);
     }
   }
 
