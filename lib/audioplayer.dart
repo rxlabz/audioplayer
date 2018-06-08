@@ -33,6 +33,8 @@ class AudioPlayer {
 
   Future<dynamic> mute(bool muted) => channel.invokeMethod('mute', muted);
 
+  Future<dynamic> setVolume(int volume) => channel.invokeMethod('setVolume', volume);
+
   Future<dynamic> seek(double seconds) => channel.invokeMethod('seek', seconds);
 
   void setDurationHandler(TimeChangeHandler handler) {

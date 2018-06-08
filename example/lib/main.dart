@@ -52,6 +52,8 @@ class _AudioAppState extends State<AudioApp> {
   void initAudioPlayer() {
     audioPlayer = new AudioPlayer();
 
+    audioPlayer.setVolume(10);
+
     audioPlayer.setDurationHandler((d) => setState(() {
           duration = d;
         }));
