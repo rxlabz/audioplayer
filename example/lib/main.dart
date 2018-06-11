@@ -43,31 +43,38 @@ class _AudioAppState extends State<AudioApp> {
 
   bool isMuted = false;
 
+  StreamSubscription _positionSubscription;
+  StreamSubscription _audioPlayerStateSubscription;
+
   @override
   void initState() {
     super.initState();
     initAudioPlayer();
   }
 
+  @override
+  void dispose() {
+    _positionSubscription.cancel();
+    _audioPlayerStateSubscription.cancel();
+    audioPlayer.stop();
+    super.dispose();
+  }
+
   void initAudioPlayer() {
     audioPlayer = new AudioPlayer();
-
-    audioPlayer.setDurationHandler((d) => setState(() {
-          duration = d;
-        }));
-
-    audioPlayer.setPositionHandler((p) => setState(() {
-          position = p;
-        }));
-
-    audioPlayer.setCompletionHandler(() {
-      onComplete();
-      setState(() {
-        position = duration;
-      });
-    });
-
-    audioPlayer.setErrorHandler((msg) {
+    _positionSubscription = audioPlayer.onAudioPositionChanged.listen(
+      (p) => setState(() => position = p)
+    );
+    _audioPlayerStateSubscription = audioPlayer.onPlayerStateChanged.listen((s) {
+      if (s == AudioPlayerState.PLAYING) {
+        setState(() => duration = audioPlayer.duration);
+      } else if (s == AudioPlayerState.STOPPED) {
+        onComplete();
+        setState(() {
+          position = duration;
+        });
+      }
+    }, onError: (msg) {
       setState(() {
         playerState = PlayerState.stopped;
         duration = new Duration(seconds: 0);
@@ -77,49 +84,39 @@ class _AudioAppState extends State<AudioApp> {
   }
 
   Future play() async {
-    final result = await audioPlayer.play(kUrl);
-    if (result == 1)
-      setState(() {
-        print('_AudioAppState.play... PlayerState.playing');
-        playerState = PlayerState.playing;
-      });
+    await audioPlayer.play(kUrl);
+    setState(() {
+      playerState = PlayerState.playing;
+    });
   }
 
   Future _playLocal() async {
-    final result = await audioPlayer.play(localFilePath, isLocal: true);
-    if (result == 1) setState(() => playerState = PlayerState.playing);
+    await audioPlayer.play(localFilePath, isLocal: true);
+    setState(() => playerState = PlayerState.playing);
   }
 
   Future pause() async {
-    final result = await audioPlayer.pause();
-    if (result == 1) setState(() => playerState = PlayerState.paused);
+    await audioPlayer.pause();
+    setState(() => playerState = PlayerState.paused);
   }
 
   Future stop() async {
-    final result = await audioPlayer.stop();
-    if (result == 1)
-      setState(() {
-        playerState = PlayerState.stopped;
-        position = new Duration();
-      });
+    await audioPlayer.stop();
+    setState(() {
+      playerState = PlayerState.stopped;
+      position = new Duration();
+    });
   }
 
   Future mute(bool muted) async {
-    final result = await audioPlayer.mute(muted);
-    if (result == 1)
-      setState(() {
-        isMuted = muted;
-      });
+    await audioPlayer.mute(muted);
+    setState(() {
+      isMuted = muted;
+    });
   }
 
   void onComplete() {
     setState(() => playerState = PlayerState.stopped);
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-    audioPlayer.stop();
   }
 
   Future<Uint8List> _loadFileBytes(String url, {OnError onError}) async {
@@ -135,7 +132,7 @@ class _AudioAppState extends State<AudioApp> {
   Future _loadFile() async {
     final bytes = await _loadFileBytes(kUrl,
         onError: (Exception exception) =>
-            print('_loadFile => exception ${exception}'));
+            print('_loadFile => exception $exception'));
 
     final dir = await getApplicationDocumentsDirectory();
     final file = new File('${dir.path}/audio.mp3');
