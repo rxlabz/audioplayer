@@ -1,9 +1,8 @@
 # Changelog
 
 ## 0.5.0
-- BREAKING Change: The handlers are now passed in the AudioPlayer constructor as
-  opposed to being set via methods.
-- Code improvements.
+- BREAKING Change: No more separate handlers for communicating the state of the player. Instead we rely on streams to publish state changes and position updates.
+- Code formatting and flow improvements. Preparation for testing.
 
 ## 0.4.0
 
