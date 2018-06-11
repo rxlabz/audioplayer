@@ -98,6 +98,7 @@ FlutterMethodChannel *_channel;
                                                                        queue:nil
                                                                   usingBlock:^(NSNotification* note){
                                                                     [self stop];
+                                                                    [_channel invokeMethod:@"audio.onComplete" arguments:nil];
                                                                   }];
     [observers addObject:anobserver];
 
@@ -151,7 +152,7 @@ FlutterMethodChannel *_channel;
     isPlaying = false;
   }
   [playerItem seekToTime:CMTimeMake(0, 1)];
-  [_channel invokeMethod:@"audio.onComplete" arguments:nil];
+  [_channel invokeMethod:@"audio.onStop" arguments:nil];
 }
 
 - (void)mute:(bool)muted {

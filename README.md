@@ -1,30 +1,27 @@
 # AudioPlayer
 
-A Flutter audio plugin (ObjC/Java) to play remote or local audio files 
- 
+A Flutter audio plugin.
+
 ## Features
- 
+
 - [x] Android & iOS
-  - [x] play (remote and local file)
+  - [x] play (remote file)
   - [x] stop
   - [x] pause
-  - [x] seek
   - [x] onComplete
   - [x] onDuration / onCurrentPosition
-
-- Supported formats 
-  - [Android](https://developer.android.com/guide/topics/media/media-formats.html)
-  - [iOS](http://www.techotopia.com/index.php/Playing_Audio_on_iOS_8_using_AVAudioPlayer#Supported_Audio_Formats)
+  - [x] seek
+  - [x] mute
 
 ![screenshot](https://www.evernote.com/shard/s1/sh/c9e2e0dc-4e1b-4797-b23f-2bdf0f6f3387/d1138680d3b4bdcd/res/1afa2507-2df2-42ef-a840-d7f3519f5cb3/skitch.png?resizeSmall&width=320)
 
 ## Usage
 
-[Example](https://github.com/rxlabz/audioplayer/blob/master/example/lib/main.dart) 
+[Example](https://github.com/rxlabz/audioplayer/blob/master/example/lib/main.dart)
 
-To use this plugin : 
+To use this plugin :
 
-- add the dependency to your [pubspec.yaml](https://github.com/rxlabz/audioplayer/blob/master/example/pubspec.yaml) file.
+- Add the dependency to your [pubspec.yaml](https://github.com/rxlabz/audioplayer/blob/master/example/pubspec.yaml) file.
 
 ```yaml
   dependencies:
@@ -33,67 +30,57 @@ To use this plugin :
     audioplayer:
 ```
 
-- instantiate an AudioPlayer instance
+- Instantiate an AudioPlayer instance
 
 ```dart
 //...
-AudioPlayer audioPlayer = new AudioPlayer();
+AudioPlayer audioPlugin = new AudioPlayer();
 //...
 ```
 
-### play, pause , stop, seek
+### Player Controls
 
 ```dart
-play() async {
-  final result = await audioPlayer.play(kUrl);
-  if (result == 1) setState(() => playerState = PlayerState.playing);
+Future<void> play() async {
+  await audioPlayer.play(kUrl);
+  setState(() => playerState = PlayerState.playing);
 }
 
-// add a isLocal parameter to play a local file
-playLocal() async {
-  final result = await audioPlayer.play(kUrl);
-  if (result == 1) setState(() => playerState = PlayerState.playing);
+Future<void> pause() async {
+  await audioPlayer.pause();
+  setState(() => playerState = PlayerState.paused);
 }
 
-
-pause() async {
-  final result = await audioPlayer.pause();
-  if (result == 1) setState(() => playerState = PlayerState.paused);
-}
-
-stop() async {
-  final result = await audioPlayer.stop();
-  if (result == 1) setState(() => playerState = PlayerState.stopped);
-}
-
-// seek 5 seconds from the beginning
-audioPlayer.seek(5.0);
-
-```
-
-### duration, position, complete, error (temporary api) 
-
-The Dart part of the plugin listen for platform calls :
-
-```dart
-//...
-audioPlayer.setDurationHandler((Duration d) => setState(() {
-  duration = d;
-}));
-
-audioPlayer.setPositionHandler((Duration  p) => setState(() {
-  position = p;
-}));
-
-audioPlayer.setCompletionHandler(() {
-  onComplete();
+Future<void> stop() async {
+  await audioPlayer.stop();
   setState(() {
-    position = duration;
+    playerState = PlayerState.stopped;
+    position = new Duration();
   });
-});
+}
 
-audioPlayer.setErrorHandler((msg) {
-  print('audioPlayer error : $msg');
+```
+
+### Status and current position
+
+The dart part of the plugin listen for platform calls :
+
+```dart
+//...
+_positionSubscription = audioPlayer.onAudioPositionChanged.listen(
+  (p) => setState(() => position = p)
+);
+
+_audioPlayerStateSubscription = audioPlayer.onPlayerStateChanged.listen((s) {
+  if (s == AudioPlayerState.PLAYING) {
+    setState(() => duration = audioPlayer.duration);
+  } else if (s == AudioPlayerState.STOPPED) {
+    onComplete();
+    setState(() {
+      position = duration;
+    });
+  }
+}, onError: (msg) {
   setState(() {
     playerState = PlayerState.stopped;
     duration = new Duration(seconds: 0);
@@ -102,17 +89,14 @@ audioPlayer.setErrorHandler((msg) {
 });
 ```
 
-## iOS
-   
-### ~~:warning: Swift project~~
+Do not forget to cancel all the subscriptions when the widget is disposed.
 
-~~this plugin is written in swift, so to use with in a Flutter/ObjC project, 
-you need to convert the project to "Current swift syntax" ( Edit/Convert/current swift syntax)~  
+## iOS
 
 ## :warning: iOS App Transport Security
 
 By default iOS forbids loading from non-https url. To cancel this restriction edit your .plist and add :
- 
+
 ```xml
 <key>NSAppTransportSecurity</key>
 <dict>
@@ -120,6 +104,10 @@ By default iOS forbids loading from non-https url. To cancel this restriction ed
     <true/>
 </dict>
 ```
+## Troubleshooting
+
+- If you get a MissingPluginException, try to `flutter build apk` on Android, or `flutter build ios`
+- to use the plugin in a ObjC iOS project, add 'use_frameworks!' to your podfile cf. [example](https://github.com/rxlabz/audioplayer/blob/master/example/ios/Podfile)
 
 ## Getting Started
 

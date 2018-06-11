@@ -12,6 +12,10 @@ enum AudioPlayerState {
   PLAYING,
   /// Paused. The user can [resume] the playback without providing the URL.
   PAUSED,
+  /// The playback has been completed. This state is the same as [STOPPED],
+  /// however we differentiate it because some clients might want to know when
+  /// the playback is done versus when the user has stopped the playback.
+  COMPLETED,
 }
 
 const MethodChannel _channel =
@@ -60,11 +64,11 @@ class AudioPlayer {
   /// Reports what the player is currently doing.
   AudioPlayerState get state => _state;
 
-  /// Reports the duration of the current media being played.
-  Duration get duration {
-    assert(_state != AudioPlayerState.STOPPED);
-    return _duration;
-  }
+  /// Reports the duration of the current media being played. It might return
+  /// 0 if we have not determined the length of the media yet. It is best to
+  /// call this from a state listener when the state has become
+  /// [AudioPlayerState.PLAYING].
+  Duration get duration => _duration;
 
   /// Stream for subscribing to audio position change events. Roughly fires
   /// every 200 milliseconds. Will continously update the position of the
@@ -86,9 +90,13 @@ class AudioPlayer {
         _state = AudioPlayerState.PAUSED;
         _playerStateController.add(AudioPlayerState.PAUSED);
         break;
-      case "audio.onComplete":
+      case "audio.onStop":
         _state = AudioPlayerState.STOPPED;
         _playerStateController.add(AudioPlayerState.STOPPED);
+        break;
+      case "audio.onComplete":
+        _state = AudioPlayerState.COMPLETED;
+        _playerStateController.add(AudioPlayerState.COMPLETED);
         break;
       case "audio.onError":
         // If there's an error, we assume the player has stopped.
