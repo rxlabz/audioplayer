@@ -1,15 +1,20 @@
 # Changelog
 
+## 0.5.0
+- BREAKING Change: The handlers are now passed in the AudioPlayer constructor as
+  opposed to being set via methods.
+- Code improvements.
+
 ## 0.4.0
 
 - Feat : merge PR from [mindon](https://github.com/mindon) with mute methods and various improvements
-- fixes Future<int> errors woth --preview-dart2 
+- fixes Future<int> errors with --preview-dart2
 - Example : add a slider to demonstrate the seek feature
 
 ## 0.3.0
 
 - merge PR from [johanhenselmans](https://github.com/johanhenselmans) to switch iOS to ObjectiveC
-- merge PR from [oaks](https://github.com/oakes) to add the seek feature 
+- merge PR from [oaks](https://github.com/oakes) to add the seek feature
 
 ## 0.2.0
 
@@ -22,14 +27,14 @@
 
 ## 0.0.2
 
-Separated handlers for position, duration, completion and errors 
- 
+Separated handlers for position, duration, completion and errors
+
 - setDurationHandler(TimeChangeHandler handler)
 - setPositionHandler(TimeChangeHandler handler)
 - setCompletionHandler(VoidCallback callback)
 - setErrorHandler(ErrorHandler handler)
-  
-- new typedef 
+
+- new typedef
 ```dart
 typedef void TimeChangeHandler(Duration duration);
 typedef void ErrorHandler(String message);

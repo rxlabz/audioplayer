@@ -18,64 +18,67 @@ import android.content.Context;
 import android.os.Build;
 
 /**
- * AudioplayerPlugin
+ * Android implementation for AudioPlayerPlugin.
  */
 public class AudioplayerPlugin implements MethodCallHandler {
+  private static final String ID = "bz.rxla.flutter/audio";
+
   private final MethodChannel channel;
-  private Registrar registrar;
-  private static AudioManager am;
-
-  final Handler handler = new Handler();
-
-  MediaPlayer mediaPlayer;
+  private final Registrar registrar;
+  private final AudioManager am;
+  private final Handler handler = new Handler();
+  private MediaPlayer mediaPlayer;
 
   public static void registerWith(Registrar registrar) {
-    final MethodChannel channel = new MethodChannel(registrar.messenger(), "bz.rxla.flutter/audio");
+    final MethodChannel channel = new MethodChannel(registrar.messenger(), ID);
     channel.setMethodCallHandler(new AudioplayerPlugin(registrar, channel));
   }
 
   private AudioplayerPlugin(Registrar registrar, MethodChannel channel) {
     this.registrar = registrar;
     this.channel = channel;
-    this.channel.setMethodCallHandler(this);
-    if(AudioplayerPlugin.am == null) {
-      AudioplayerPlugin.am = (AudioManager)registrar.context().getApplicationContext().getSystemService(Context.AUDIO_SERVICE);
-    }
+    channel.setMethodCallHandler(this);
+    Context context = registrar.context().getApplicationContext();
+    this.am = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
   }
 
   @Override
   public void onMethodCall(MethodCall call, MethodChannel.Result response) {
-    if (call.method.equals("play")) {
-      String url = ((HashMap) call.arguments()).get("url").toString();
-      Boolean resPlay = play(url);
-      response.success(1);
-    } else if (call.method.equals("pause")) {
-      pause();
-      response.success(1);
-    } else if (call.method.equals("stop")) {
-      stop();
-      response.success(1);
-    } else if (call.method.equals("seek")) {
-      double position = call.arguments();
-      seek(position);
-      response.success(1);
-    } else if (call.method.equals("mute")) {
-      Boolean muted = call.arguments();
-      mute(muted);
-      response.success(1);
-    } else {
-      response.notImplemented();
+    switch (call.method) {
+      case "play":
+        play(call.argument("url").toString());
+        response.success(null);
+        break;
+      case "pause":
+        pause();
+        response.success(null);
+        break;
+      case "stop":
+        stop();
+        response.success(null);
+        break;
+      case "seek":
+        double position = call.arguments();
+        seek(position);
+        response.success(null);
+        break;
+      case "mute":
+        Boolean muted = call.arguments();
+        mute(muted);
+        response.success(null);
+        break;
+      default:
+        response.notImplemented();
     }
   }
- 
- private void mute(Boolean muted) {
-  if(AudioplayerPlugin.am == null) return;
-  if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-    AudioplayerPlugin.am.adjustStreamVolume(AudioManager.STREAM_MUSIC, muted ? AudioManager.ADJUST_MUTE : AudioManager.ADJUST_UNMUTE, 0);
-  } else {
-    AudioplayerPlugin.am.setStreamMute(AudioManager.STREAM_MUSIC, muted);
+
+  private void mute(Boolean muted) {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+      am.adjustStreamVolume(AudioManager.STREAM_MUSIC, muted ? AudioManager.ADJUST_MUTE : AudioManager.ADJUST_UNMUTE, 0);
+    } else {
+      am.setStreamMute(AudioManager.STREAM_MUSIC, muted);
+    }
   }
- }
 
   private void seek(double position) {
     mediaPlayer.seekTo((int) (position * 1000));
@@ -87,15 +90,19 @@ public class AudioplayerPlugin implements MethodCallHandler {
       mediaPlayer.stop();
       mediaPlayer.release();
       mediaPlayer = null;
+      channel.invokeMethod("audio.onComplete", null);
     }
   }
 
   private void pause() {
-    mediaPlayer.pause();
     handler.removeCallbacks(sendData);
+    if (mediaPlayer != null) {
+      mediaPlayer.pause();
+      channel.invokeMethod("audio.onPause", true);
+    }
   }
 
-  private Boolean play(String url) {
+  private void play(String url) {
     if (mediaPlayer == null) {
       mediaPlayer = new MediaPlayer();
       mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
@@ -103,63 +110,54 @@ public class AudioplayerPlugin implements MethodCallHandler {
       try {
         mediaPlayer.setDataSource(url);
       } catch (IOException e) {
-        e.printStackTrace();
-        Log.d("AUDIO", "invalid DataSource");
+        Log.w(ID, "Invalid DataSource", e);
+        channel.invokeMethod("audio.onError", "Invalid Datasource");
+        return;
       }
 
       mediaPlayer.prepareAsync();
+
+      mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener(){
+        @Override
+        public void onPrepared(MediaPlayer mp) {
+          mediaPlayer.start();
+          channel.invokeMethod("audio.onStart", mediaPlayer.getDuration());
+        }
+      });
+
+      mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener(){
+        @Override
+        public void onCompletion(MediaPlayer mp) {
+          stop();
+        }
+      });
+
+      mediaPlayer.setOnErrorListener(new MediaPlayer.OnErrorListener(){
+        @Override
+        public boolean onError(MediaPlayer mp, int what, int extra) {
+          channel.invokeMethod("audio.onError", String.format("{\"what\":%d,\"extra\":%d}", what, extra));
+          return true;
+        }
+      });
     } else {
-      channel.invokeMethod("audio.onDuration", mediaPlayer.getDuration());
-
       mediaPlayer.start();
-      channel.invokeMethod("audio.onStart", true);
+      channel.invokeMethod("audio.onStart", mediaPlayer.getDuration());
     }
-
-    mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener(){
-      @Override
-      public void onPrepared(MediaPlayer mp) {
-        channel.invokeMethod("audio.onDuration", mediaPlayer.getDuration());
-
-        mediaPlayer.start();
-        channel.invokeMethod("audio.onStart", true);
-      }
-    });
-
-    mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener(){
-      @Override
-      public void onCompletion(MediaPlayer mp) {
-        stop();
-        channel.invokeMethod("audio.onComplete", true);
-      }
-    });
-
-    mediaPlayer.setOnErrorListener(new MediaPlayer.OnErrorListener(){
-      @Override
-      public boolean onError(MediaPlayer mp, int what, int extra) {
-        channel.invokeMethod("audio.onError", String.format("{\"what\":%d,\"extra\":%d}", what, extra));
-        return true;
-      }
-    });
-
-
     handler.post(sendData);
-
-    return true;
   }
 
   private final Runnable sendData = new Runnable(){
     public void run(){
       try {
-        if( ! mediaPlayer.isPlaying() ){
+        if (!mediaPlayer.isPlaying()) {
           handler.removeCallbacks(sendData);
         }
         int time = mediaPlayer.getCurrentPosition();
         channel.invokeMethod("audio.onCurrentPosition", time);
-
         handler.postDelayed(this, 200);
       }
       catch (Exception e) {
-        e.printStackTrace();
+        Log.w(ID, "When running handler", e);
       }
     }
   };

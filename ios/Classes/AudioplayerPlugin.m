@@ -3,38 +3,28 @@
 #import <AVKit/AVKit.h>
 #import <AVFoundation/AVFoundation.h>
 
-//#import <audioplayer/audioplayer-Swift.h>
 static NSString *const CHANNEL_NAME = @"bz.rxla.flutter/audio";
 static FlutterMethodChannel *channel;
 static AVPlayer *player;
 static AVPlayerItem *playerItem;
 
-
 @interface AudioplayerPlugin()
--(void) pause;
--(void) stop;
--(void) mute: (BOOL) muted;
--(void) seek: (CMTime) time;
--(void) onSoundComplete;
--(void) updateDuration;
--(void) onTimeInterval: (CMTime) time;
-
-
+-(void)pause;
+-(void)stop;
+-(void)mute:(BOOL)muted;
+-(void)seek:(CMTime)time;
+-(void)onStart;
+-(void)onTimeInterval:(CMTime)time;
 @end
 
+@implementation AudioplayerPlugin
 
-@implementation AudioplayerPlugin {
-  FlutterResult _result;
-  
-}
-CMTime duration;
 CMTime position;
 NSString *lastUrl;
 BOOL isPlaying = false;
 NSMutableSet *observers;
 NSMutableSet *timeobservers;
 FlutterMethodChannel *_channel;
-
 
 + (void)registerWithRegistrar:(NSObject<FlutterPluginRegistrar>*)registrar {
   FlutterMethodChannel* channel = [FlutterMethodChannel
@@ -45,192 +35,142 @@ FlutterMethodChannel *_channel;
   _channel = channel;
 }
 
-
-- (id)init {
-  self = [super init];
-  if (self) {
-  }
-  return self;
-}
-
-
 - (void)handleMethodCall:(FlutterMethodCall*)call result:(FlutterResult)result {
-  NSLog(@"iOS => call %@",call.method);
-  
   typedef void (^CaseBlock)();
-  
   // Squint and this looks like a proper switch!
   NSDictionary *methods = @{
                             @"play":
                               ^{
-                                NSLog(@"play!");
                                 NSString *url = call.arguments[@"url"];
-                                if (url == nil)
-                                  result(0);
-                                if (call.arguments[@"isLocal"]==nil)
-                                  result(0);
-                                int isLocal = [call.arguments[@"isLocal"]intValue] ;
-                                NSLog(@"isLocal: %d %@",isLocal, call.arguments[@"isLocal"] );
-                                [self togglePlay:url isLocal:isLocal];
+                                int isLocal = [call.arguments[@"isLocal"] intValue];
+                                [self play:url isLocal:isLocal];
+                                result(nil);
                               },
                             @"pause":
                               ^{
-                                NSLog(@"pause");
                                 [self pause];
+                                result(nil);
                               },
                             @"stop":
                               ^{
-                                NSLog(@"stop");
                                 [self stop];
+                                result(nil);
                               },
                             @"mute":
                               ^{
-                                NSLog(@"mute");
-                                [self mute: [call.arguments boolValue]];
+                                [self mute:[call.arguments boolValue]];
+                                result(nil);
                               },
                             @"seek":
                               ^{
-                                NSLog(@"seek");
-                                [self seek: CMTimeMakeWithSeconds([call.arguments doubleValue], 1)];
+                                [self seek:CMTimeMakeWithSeconds([call.arguments doubleValue], 1)];
+                                result(nil);
                               }
                             };
-  
+
   CaseBlock c = methods[call.method];
-  if (c) c(); else {
-    NSLog(@"not implemented");
+  if (c) {
+    c();
+  } else {
     result(FlutterMethodNotImplemented);
   }
-  result(@(1));
 }
 
-
--(void) togglePlay: (NSString*) url isLocal: (int) isLocal
-{
-  NSLog(@"togglePlay %@",url );
+- (void)play:(NSString*)url isLocal:(int)isLocal {
   if (![url isEqualToString:lastUrl]) {
     [playerItem removeObserver:self
                     forKeyPath:@"player.currentItem.status"];
-    
-    // removeOnSoundComplete
-    // [[ NSNotificationCenter defaultCenter] removeObserver:self];
-    for (id ob in observers)
+
+    for (id ob in observers) {
       [[NSNotificationCenter defaultCenter] removeObserver:ob];
+    }
     observers = nil;
-    
-    if( isLocal ){
-      playerItem = [[ AVPlayerItem alloc]initWithURL:[NSURL fileURLWithPath:url]];
+
+    if (isLocal) {
+      playerItem = [[AVPlayerItem alloc] initWithURL:[NSURL fileURLWithPath:url]];
     } else {
-      playerItem = [[ AVPlayerItem alloc] initWithURL:[NSURL URLWithString:url ]];
+      playerItem = [[AVPlayerItem alloc] initWithURL:[NSURL URLWithString:url]];
     }
     lastUrl = url;
-    
-    id anobserver = [[ NSNotificationCenter defaultCenter ] addObserverForName: AVPlayerItemDidPlayToEndTimeNotification
-                                                                        object: playerItem
-                                                                         queue: nil
-                                                                    usingBlock:^(NSNotification* note){
-                                                                      [self onSoundComplete];
-                                                                    }];
+
+    id anobserver = [[NSNotificationCenter defaultCenter] addObserverForName:AVPlayerItemDidPlayToEndTimeNotification
+                                                                      object:playerItem
+                                                                       queue:nil
+                                                                  usingBlock:^(NSNotification* note){
+                                                                    [self stop];
+                                                                  }];
     [observers addObject:anobserver];
-    
-    if (player){
-      [ player replaceCurrentItemWithPlayerItem: playerItem ];
+
+    if (player) {
+      [player replaceCurrentItemWithPlayerItem:playerItem];
     } else {
-      player = [[ AVPlayer alloc ] initWithPlayerItem: playerItem ];
-      
-      // stream player position
+      player = [[AVPlayer alloc] initWithPlayerItem:playerItem];
+      // Stream player position.
+      // This call is only active when the player is active so there's no need to
+      // remove it when player is paused or stopped.
       CMTime interval = CMTimeMakeWithSeconds(0.2, NSEC_PER_SEC);
-      id timeObserver = [ player  addPeriodicTimeObserverForInterval: interval queue: nil usingBlock:^(CMTime time){
-        //NSLog(@"time interval: %f",CMTimeGetSeconds(time));
-        [self onTimeInterval: time];
+      id timeObserver = [player addPeriodicTimeObserverForInterval:interval queue:nil usingBlock:^(CMTime time){
+        [self onTimeInterval:time];
       }];
       [timeobservers addObject:timeObserver];
-      
     }
-    
+
     // is sound ready
     [[player currentItem] addObserver:self
                            forKeyPath:@"player.currentItem.status"
                               options:0
                               context:nil];
   }
-  
-  if (isPlaying == true ){
-    pause();
-  } else {
-    [self updateDuration];
-    [ player play];
-    isPlaying = true;
-  }
+  [self onStart];
+  [player play];
+  isPlaying = true;
 }
 
-
-
--(void) updateDuration
-{
-  CMTime d = [[player currentItem] duration ];
-  NSLog(@"ios -> updateDuration...%f", CMTimeGetSeconds(d));
-  duration = d;
-  if(CMTimeGetSeconds(duration)>0){
-    NSLog(@"ios -> invokechannel");
+- (void)onStart {
+  CMTime duration = [[player currentItem] duration];
+  if (CMTimeGetSeconds(duration) > 0) {
    int mseconds= CMTimeGetSeconds(duration)*1000;
-    [_channel invokeMethod:@"audio.onDuration" arguments:@(mseconds)];
+    [_channel invokeMethod:@"audio.onStart" arguments:@(mseconds)];
   }
 }
 
-
-
--(void) onTimeInterval: (CMTime) time {
-  NSLog(@"ios -> onTimeInterval...");
+- (void)onTimeInterval:(CMTime)time {
   int mseconds =  CMTimeGetSeconds(time)*1000;
   [_channel invokeMethod:@"audio.onCurrentPosition" arguments:@(mseconds)];
 }
 
-
--(void) pause {
-  [ player pause ];
+- (void)pause {
+  [player pause];
   isPlaying = false;
+  [_channel invokeMethod:@"audio.onPause" arguments:nil];
 }
 
-
--(void) stop {
-  if(isPlaying){
-    [ self pause ];
-    [ self seek: CMTimeMake(0, 1) ];
+- (void)stop {
+  if (isPlaying) {
+    [player pause];
     isPlaying = false;
-    NSLog(@"stop");
   }
+  [playerItem seekToTime:CMTimeMake(0, 1)];
+  [_channel invokeMethod:@"audio.onComplete" arguments:nil];
 }
 
--(void) mute: (bool) muted {
-    player.muted = muted;
+- (void)mute:(bool)muted {
+  player.muted = muted;
 }
 
--(void) seek: (CMTime) time {
+- (void)seek:(CMTime)time {
   [playerItem seekToTime:time];
 }
 
-
--(void) onSoundComplete {
-  NSLog(@"ios -> onSoundComplete...");
-  isPlaying = false;
-  [ self pause ];
-  [ self seek: CMTimeMakeWithSeconds(0,1)];
-  [ _channel invokeMethod:@"audio.onComplete" arguments: nil];
-}
-
-
--(void)observeValueForKeyPath:(NSString *)keyPath
-                     ofObject:(id)object
-                       change:(NSDictionary *)change
-                      context:(void *)context {
-  
-  if ([keyPath isEqualToString: @"player.currentItem.status"]) {
-    NSLog(@"player status: %ld",(long)[[player currentItem] status ]);
-    // Do something with the status…
-    if ([[player currentItem] status ] == AVPlayerItemStatusReadyToPlay) {
-      [self updateDuration];
-    } else if ([[player currentItem] status ] == AVPlayerItemStatusFailed) {
-      [_channel invokeMethod:@"audio.onError" arguments:@[(player.currentItem.error.localizedDescription)] ];
+- (void)observeValueForKeyPath:(NSString *)keyPath
+                      ofObject:(id)object
+                        change:(NSDictionary *)change
+                       context:(void *)context {
+  if ([keyPath isEqualToString:@"player.currentItem.status"]) {
+    if ([[player currentItem] status] == AVPlayerItemStatusReadyToPlay) {
+      [self onStart];
+    } else if ([[player currentItem] status] == AVPlayerItemStatusFailed) {
+      [_channel invokeMethod:@"audio.onError" arguments:@[(player.currentItem.error.localizedDescription)]];
     }
   } else {
     // Any unrecognized context must belong to super
@@ -241,18 +181,16 @@ FlutterMethodChannel *_channel;
   }
 }
 
-
 - (void)dealloc {
-  for (id ob in timeobservers)
+  for (id ob in timeobservers) {
     [player removeTimeObserver:ob];
+  }
   timeobservers = nil;
-  
-  for (id ob in observers)
+
+  for (id ob in observers) {
     [[NSNotificationCenter defaultCenter] removeObserver:ob];
+  }
   observers = nil;
 }
 
-
-
 @end
-
