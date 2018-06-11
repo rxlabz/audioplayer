@@ -1,6 +1,6 @@
 # AudioPlayer
 
-A Flutter audio plugin.
+A Flutter audio plugin (ObjC/Java) to play remote or local audio files 
 
 ## Features
 
