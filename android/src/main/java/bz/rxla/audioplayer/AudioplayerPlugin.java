@@ -67,6 +67,11 @@ public class AudioplayerPlugin implements MethodCallHandler {
         mute(muted);
         response.success(null);
         break;
+      case "setVolume":
+        int volume = call.arguments();
+        setVolume(volume);
+        response.success(null);
+        break;
       default:
         response.notImplemented();
     }
@@ -78,6 +83,10 @@ public class AudioplayerPlugin implements MethodCallHandler {
     } else {
       am.setStreamMute(AudioManager.STREAM_MUSIC, muted);
     }
+  }
+
+  private void setVolume(int volume) {
+    am.setStreamVolume(AudioManager.STREAM_MUSIC, volume, 0);
   }
 
   private void seek(double position) {
