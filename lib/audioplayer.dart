@@ -55,6 +55,9 @@ class AudioPlayer {
   /// Mute sound.
   Future<void> mute(bool muted) async => await _channel.invokeMethod('mute', muted);
 
+  /// Set playing volume.
+  Future<void> setVolume(int volume) async => await _channel.invokeMethod('setVolume', volume);
+
   /// Seek to a specific position in the audio stream.
   Future<void> seek(double seconds) async => await _channel.invokeMethod('seek', seconds);
 
