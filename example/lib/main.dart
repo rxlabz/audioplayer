@@ -51,9 +51,6 @@ class _AudioAppState extends State<AudioApp> {
   void initState() {
     super.initState();
     initAudioPlayer();
-    audioPlayer.getVolume().then((volume) {
-      _volume = volume;
-    });
   }
 
   @override
@@ -92,6 +89,11 @@ class _AudioAppState extends State<AudioApp> {
     await audioPlayer.play(kUrl);
     setState(() {
       playerState = PlayerState.playing;
+    });
+    audioPlayer.getVolume().then((volume) {
+      setState(() {
+        _volume = volume;
+      });
     });
   }
 

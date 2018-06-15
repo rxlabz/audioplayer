@@ -12,6 +12,8 @@ static AVPlayerItem *playerItem;
 -(void)pause;
 -(void)stop;
 -(void)mute:(BOOL)muted;
+-(NSNumber *)getVolume;
+-(void)setVolume:(int)volume;
 -(void)seek:(CMTime)time;
 -(void)onStart;
 -(void)onTimeInterval:(CMTime)time;
@@ -59,6 +61,16 @@ FlutterMethodChannel *_channel;
                             @"mute":
                               ^{
                                 [self mute:[call.arguments boolValue]];
+                                result(nil);
+                              },
+                            @"getVolume":
+                              ^{
+                                NSNumber *volumeRef = [self getVolume];
+                                result(volumeRef);
+                              },
+                            @"setVolume":
+                              ^{
+                                [self setVolume:[call.arguments intValue]];
                                 result(nil);
                               },
                             @"seek":
@@ -157,6 +169,16 @@ FlutterMethodChannel *_channel;
 
 - (void)mute:(bool)muted {
   player.muted = muted;
+}
+
+- (NSNumber *)getVolume {
+    int volume = (int)roundf(player.volume * 100.0);
+    NSNumber *volumeRef = [NSNumber numberWithInt:volume];
+    return volumeRef;
+}
+
+- (void)setVolume:(int)volume {
+  player.volume = (float)volume / 100.0;
 }
 
 - (void)seek:(CMTime)time {

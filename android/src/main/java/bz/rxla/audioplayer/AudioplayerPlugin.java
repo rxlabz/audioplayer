@@ -91,6 +91,7 @@ public class AudioplayerPlugin implements MethodCallHandler {
 
   private int getVolume() {
 /*
+    //TODO: Replace volume getter with this logic to normalize to 0 to 100
     int maxVolume = getStreamMaxVolume(AudioManager.STREAM_MUSIC);
     int minVolume = getStreamMinVolume(AudioManager.STREAM_MUSIC);
     int volume = (am.getStreamVolume(AudioManager.STREAM_MUSIC) - minVolume) * 100 / (maxVolume - minVolume);
@@ -101,6 +102,7 @@ public class AudioplayerPlugin implements MethodCallHandler {
 
   private void setVolume(int volume) {
 /*
+    //TODO: Replace volume setter with this logic to normalize to 0 to 100
     int maxVolume = getStreamMaxVolume(AudioManager.STREAM_MUSIC);
     int minVolume = getStreamMinVolume(AudioManager.STREAM_MUSIC);
     int index = volume * (maxVolume - minVolume) / 100 + minVolume;
