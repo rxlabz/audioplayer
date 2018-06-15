@@ -26,6 +26,7 @@ class AudioApp extends StatefulWidget {
 class _AudioAppState extends State<AudioApp> {
   Duration duration;
   Duration position;
+  int _volume;
 
   AudioPlayer audioPlayer;
 
@@ -50,6 +51,9 @@ class _AudioAppState extends State<AudioApp> {
   void initState() {
     super.initState();
     initAudioPlayer();
+    audioPlayer.getVolume().then((volume) {
+      _volume = volume;
+    });
   }
 
   @override
@@ -218,6 +222,25 @@ class _AudioAppState extends State<AudioApp> {
                 onPressed: () => mute(false),
                 icon: new Icon(Icons.headset),
                 color: Colors.cyan),
+          ],
+        ),
+        new Row (
+          children: <Widget>[
+            new Icon(Icons.volume_down),
+            new Expanded(child:
+              new Slider(
+                min: 0.0,
+                max: 100.0,
+                value: _volume?.toDouble() ?? 50.0,
+                onChanged: (double newValue) {
+                  setState(() {
+                    _volume = newValue.toInt();
+                  });
+                  audioPlayer.setVolume(_volume);
+                },
+              ),
+            ),
+            new Icon(Icons.volume_up),
           ],
         ),
         new Row(mainAxisSize: MainAxisSize.min, children: [
