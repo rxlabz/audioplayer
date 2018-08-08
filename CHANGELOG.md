@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.5.0+1
+- Declare support for Dart 2.0 stable in the Dart SDK upper constraint
+
 ## 0.5.0
 - BREAKING Change: No more separate handlers for communicating the state of the player. Instead we rely on streams to publish state changes and position updates.
 - Code formatting and flow improvements. Preparation for testing.
