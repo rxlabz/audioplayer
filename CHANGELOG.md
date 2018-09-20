@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.1
+- Allow Dart 2 SDK
+- Fix java lint warnings.
+
 ## 0.5.0
 - BREAKING Change: No more separate handlers for communicating the state of the player. Instead we rely on streams to publish state changes and position updates.
 - Code formatting and flow improvements. Preparation for testing.
