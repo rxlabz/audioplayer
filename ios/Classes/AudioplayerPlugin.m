@@ -155,7 +155,7 @@ FlutterMethodChannel *_channel;
   [_channel invokeMethod:@"audio.onStop" arguments:nil];
 }
 
-- (void)mute:(bool)muted {
+- (void)mute:(BOOL)muted {
   player.muted = muted;
 }
 
