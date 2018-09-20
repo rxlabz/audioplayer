@@ -4,7 +4,6 @@ import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.Handler;
 import android.util.Log;
-import io.flutter.app.FlutterActivity;
 import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.MethodChannel.Result;
@@ -24,7 +23,6 @@ public class AudioplayerPlugin implements MethodCallHandler {
   private static final String ID = "bz.rxla.flutter/audio";
 
   private final MethodChannel channel;
-  private final Registrar registrar;
   private final AudioManager am;
   private final Handler handler = new Handler();
   private MediaPlayer mediaPlayer;
@@ -35,7 +33,6 @@ public class AudioplayerPlugin implements MethodCallHandler {
   }
 
   private AudioplayerPlugin(Registrar registrar, MethodChannel channel) {
-    this.registrar = registrar;
     this.channel = channel;
     channel.setMethodCallHandler(this);
     Context context = registrar.context().getApplicationContext();
