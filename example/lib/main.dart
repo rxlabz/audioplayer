@@ -26,6 +26,7 @@ class AudioApp extends StatefulWidget {
 class _AudioAppState extends State<AudioApp> {
   Duration duration;
   Duration position;
+  int _volume;
 
   AudioPlayer audioPlayer;
 
@@ -62,6 +63,7 @@ class _AudioAppState extends State<AudioApp> {
 
   void initAudioPlayer() {
     audioPlayer = new AudioPlayer();
+    audioPlayer.setVolume(10);
     _positionSubscription = audioPlayer.onAudioPositionChanged.listen(
       (p) => setState(() => position = p)
     );
@@ -87,6 +89,11 @@ class _AudioAppState extends State<AudioApp> {
     await audioPlayer.play(kUrl);
     setState(() {
       playerState = PlayerState.playing;
+    });
+    audioPlayer.getVolume().then((volume) {
+      setState(() {
+        _volume = volume;
+      });
     });
   }
 
@@ -206,6 +213,28 @@ class _AudioAppState extends State<AudioApp> {
                     audioPlayer.seek((value / 1000).roundToDouble()),
                 min: 0.0,
                 max: duration.inMilliseconds.toDouble()),
+        new Row(mainAxisSize: MainAxisSize.min, children: [
+          new Padding(
+              padding: new EdgeInsets.all(12.0),
+              child: new Stack(children: [
+                new CircularProgressIndicator(
+                    value: 1.0,
+                    valueColor: new AlwaysStoppedAnimation(Colors.grey[300])),
+                new CircularProgressIndicator(
+                  value: position != null && position.inMilliseconds > 0
+                      ? (position?.inMilliseconds?.toDouble() ?? 0.0) /
+                      (duration?.inMilliseconds?.toDouble() ?? 0.0)
+                      : 0.0,
+                  valueColor: new AlwaysStoppedAnimation(Colors.cyan),
+                  backgroundColor: Colors.yellow,
+                ),
+              ])),
+          new Text(
+              position != null
+                  ? "${positionText ?? ''} / ${durationText ?? ''}"
+                  : duration != null ? durationText : '',
+              style: new TextStyle(fontSize: 24.0))
+        ]),
         new Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: <Widget>[
@@ -219,27 +248,24 @@ class _AudioAppState extends State<AudioApp> {
                 color: Colors.cyan),
           ],
         ),
-        new Row(mainAxisSize: MainAxisSize.min, children: [
-          new Padding(
-              padding: new EdgeInsets.all(12.0),
-              child: new Stack(children: [
-                new CircularProgressIndicator(
-                    value: 1.0,
-                    valueColor: new AlwaysStoppedAnimation(Colors.grey[300])),
-                new CircularProgressIndicator(
-                  value: position != null && position.inMilliseconds > 0
-                      ? (position?.inMilliseconds?.toDouble() ?? 0.0) /
-                          (duration?.inMilliseconds?.toDouble() ?? 0.0)
-                      : 0.0,
-                  valueColor: new AlwaysStoppedAnimation(Colors.cyan),
-                  backgroundColor: Colors.yellow,
-                ),
-              ])),
-          new Text(
-              position != null
-                  ? "${positionText ?? ''} / ${durationText ?? ''}"
-                  : duration != null ? durationText : '',
-              style: new TextStyle(fontSize: 24.0))
-        ])
+        new Row (
+          children: <Widget>[
+            new Icon(Icons.volume_down),
+            new Expanded(child:
+              new Slider(
+                min: 0.0,
+                max: 100.0,
+                value: _volume?.toDouble() ?? 50.0,
+                onChanged: (double newValue) {
+                  setState(() {
+                    _volume = newValue.toInt();
+                  });
+                  audioPlayer.setVolume(_volume);
+                },
+              ),
+            ),
+            new Icon(Icons.volume_up),
+          ],
+        ),
       ]));
 }

@@ -64,6 +64,15 @@ public class AudioplayerPlugin implements MethodCallHandler {
         mute(muted);
         response.success(null);
         break;
+      case "getVolume":
+        int volume = getVolume();
+        response.success(volume);
+        break;
+      case "setVolume":
+        int volumeToSet = call.arguments();
+        setVolume(volumeToSet);
+        response.success(null);
+        break;
       default:
         response.notImplemented();
     }
@@ -75,6 +84,28 @@ public class AudioplayerPlugin implements MethodCallHandler {
     } else {
       am.setStreamMute(AudioManager.STREAM_MUSIC, muted);
     }
+  }
+
+  private int getVolume() {
+/*
+    //TODO: Replace volume getter with this logic to normalize to 0 to 100
+    int maxVolume = getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+    int minVolume = getStreamMinVolume(AudioManager.STREAM_MUSIC);
+    int volume = (am.getStreamVolume(AudioManager.STREAM_MUSIC) - minVolume) * 100 / (maxVolume - minVolume);
+*/
+    int volume = am.getStreamVolume(AudioManager.STREAM_MUSIC);
+    return volume;
+  }
+
+  private void setVolume(int volume) {
+/*
+    //TODO: Replace volume setter with this logic to normalize to 0 to 100
+    int maxVolume = getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+    int minVolume = getStreamMinVolume(AudioManager.STREAM_MUSIC);
+    int index = volume * (maxVolume - minVolume) / 100 + minVolume;
+*/
+    int index = volume;
+    am.setStreamVolume(AudioManager.STREAM_MUSIC, index, 0);
   }
 
   private void seek(double position) {
