@@ -1,5 +1,6 @@
 package bz.rxla.audioplayer;
 
+import android.media.AudioAttributes;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.Handler;
@@ -100,9 +101,15 @@ public class AudioplayerPlugin implements MethodCallHandler {
   }
 
   private void play(String url) {
+    AudioAttributes audioAttribute = new AudioAttributes.Builder()
+            .setUsage(AudioAttributes.USAGE_MEDIA)
+            .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+            .build();
+
     if (mediaPlayer == null) {
       mediaPlayer = new MediaPlayer();
-      mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+      mediaPlayer.setAudioAttributes(audioAttribute);
+      //mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
 
       try {
         mediaPlayer.setDataSource(url);
