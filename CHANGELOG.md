@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.2
+- fix objC warning
+- updated example
+
 ## 0.5.1
 - Allow Dart 2 SDK
 - Fix java lint warnings.

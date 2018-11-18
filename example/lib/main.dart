@@ -62,10 +62,10 @@ class _AudioAppState extends State<AudioApp> {
 
   void initAudioPlayer() {
     audioPlayer = new AudioPlayer();
-    _positionSubscription = audioPlayer.onAudioPositionChanged.listen(
-      (p) => setState(() => position = p)
-    );
-    _audioPlayerStateSubscription = audioPlayer.onPlayerStateChanged.listen((s) {
+    _positionSubscription = audioPlayer.onAudioPositionChanged
+        .listen((p) => setState(() => position = p));
+    _audioPlayerStateSubscription =
+        audioPlayer.onPlayerStateChanged.listen((s) {
       if (s == AudioPlayerState.PLAYING) {
         setState(() => duration = audioPlayer.duration);
       } else if (s == AudioPlayerState.STOPPED) {
