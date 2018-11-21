@@ -14,6 +14,7 @@ buildscript {
 allprojects {
     repositories {
         jcenter()
+        mavenCentral()
     }
 }
 
@@ -29,4 +30,9 @@ android {
     lintOptions {
         disable 'InvalidPackage'
     }
+}
+
+dependencies {
+    implementation('org.apache.commons:commons-collections4:4.2')
+    implementation('org.apache.commons:commons-lang3:3.8')
 }

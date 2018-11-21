@@ -15,6 +15,10 @@ import java.util.HashMap;
 
 import android.content.Context;
 import android.os.Build;
+import android.app.Activity;
+import java.io.InputStream;
+import bz.rxla.audioplayer.InputStreamMediaDataSource;
+import android.net.Uri;
 
 /**
  * Android implementation for AudioPlayerPlugin.
@@ -26,17 +30,19 @@ public class AudioplayerPlugin implements MethodCallHandler {
   private final AudioManager am;
   private final Handler handler = new Handler();
   private MediaPlayer mediaPlayer;
+  private Activity activity;
 
   public static void registerWith(Registrar registrar) {
     final MethodChannel channel = new MethodChannel(registrar.messenger(), ID);
-    channel.setMethodCallHandler(new AudioplayerPlugin(registrar, channel));
+    channel.setMethodCallHandler(new AudioplayerPlugin(registrar, channel, registrar.activity()));
   }
 
-  private AudioplayerPlugin(Registrar registrar, MethodChannel channel) {
+  private AudioplayerPlugin(Registrar registrar, MethodChannel channel, Activity activity) {
     this.channel = channel;
     channel.setMethodCallHandler(this);
     Context context = registrar.context().getApplicationContext();
     this.am = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+    this.activity = activity;
   }
 
   @Override
@@ -105,7 +111,13 @@ public class AudioplayerPlugin implements MethodCallHandler {
       mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
 
       try {
-        mediaPlayer.setDataSource(url);
+        if (url.startsWith("content://")) {
+          InputStream inputStream = activity.getContentResolver().openInputStream(Uri.parse(url));
+          InputStreamMediaDataSource mediaDataSource = new InputStreamMediaDataSource(inputStream);
+          mediaPlayer.setDataSource(mediaDataSource);
+        } else {
+          mediaPlayer.setDataSource(url);
+        }
       } catch (IOException e) {
         Log.w(ID, "Invalid DataSource", e);
         channel.invokeMethod("audio.onError", "Invalid Datasource");
