@@ -104,6 +104,8 @@ FlutterMethodChannel *_channel;
     m_Author=author;
     m_Name = name;
     m_AlbumName= albumName;
+    [AudioplayerPlugin configNowPlayingInfoCenter];
+    
     if (![url isEqualToString:lastUrl]) {
         [playerItem removeObserver:self
                         forKeyPath:@"player.currentItem.status"];
@@ -224,9 +226,9 @@ FlutterMethodChannel *_channel;
             //停止播放的事件
             [self pause];
         }
-        NSLog(@"AVAudioSessionInterruptionTypeBegan");
+        //NSLog(@"AVAudioSessionInterruptionTypeBegan");
     }else if (interuptionType == AVAudioSessionInterruptionTypeEnded) {
-        NSLog(@"AVAudioSessionInterruptionTypeEnded");
+        //NSLog(@"AVAudioSessionInterruptionTypeEnded");
         if(!isPlaying){
             [self resume];
         }
@@ -237,7 +239,7 @@ FlutterMethodChannel *_channel;
 
 + (void)configNowPlayingInfoCenter
 {
-    NSLog(@"configNowPlayingInfoCenter");
+    //NSLog(@"configNowPlayingInfoCenter");
     Class playingInfoCenter = NSClassFromString(@"MPNowPlayingInfoCenter");
     if (playingInfoCenter) {
         NSMutableDictionary *songInfo = [[NSMutableDictionary alloc] init];
@@ -286,7 +288,7 @@ FlutterMethodChannel *_channel;
 // 在需要处理远程控制事件的具体控制器或其它类中实现
 + (void)remoteControlEventHandler
 {
-    NSLog(@"remoteControlEventHandler");
+   // NSLog(@"remoteControlEventHandler");
     // 直接使用sharedCommandCenter来获取MPRemoteCommandCenter的shared实例
     MPRemoteCommandCenter *commandCenter = [MPRemoteCommandCenter sharedCommandCenter];
     // 启用播放命令 (锁屏界面和上拉快捷功能菜单处的播放按钮触发的命令)
