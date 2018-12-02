@@ -17,14 +17,17 @@ enum AudioPlayerState {
   /// the playback is done versus when the user has stopped the playback.
   COMPLETED,
 
-  MUTE,
 
+}
+
+//remoteControlStatus
+enum AudioPlayerControlState{
+  MUTE,
   nextTrackCommand,
   previousTrackCommand,
   playCommand,
   pauseCommand,
   togglePlayPauseCommand,
-
 }
 
 const MethodChannel _channel =
@@ -40,6 +43,9 @@ const MethodChannel _channel =
 class AudioPlayer {
   final StreamController<AudioPlayerState> _playerStateController =
       new StreamController.broadcast();
+
+  final StreamController<AudioPlayerControlState> _playerControlController =
+  new StreamController.broadcast();
 
   final StreamController<Duration> _positionController =
       new StreamController.broadcast();
@@ -76,6 +82,8 @@ class AudioPlayer {
 
   /// Stream for subscribing to player state change events.
   Stream<AudioPlayerState> get onPlayerStateChanged => _playerStateController.stream;
+  Stream<AudioPlayerControlState> get onPlayerControlChanged => _playerControlController.stream;
+
 
   /// Reports what the player is currently doing.
   AudioPlayerState get state => _state;
@@ -92,9 +100,6 @@ class AudioPlayer {
   Stream<Duration> get onAudioPositionChanged => _positionController.stream;
 
   Future<void> _audioPlayerStateChange(MethodCall call) async {
-
-
-
     switch (call.method) {
       case "audio.onCurrentPosition":
         assert(_state == AudioPlayerState.PLAYING);
@@ -117,25 +122,28 @@ class AudioPlayer {
         _state = AudioPlayerState.COMPLETED;
         _playerStateController.add(AudioPlayerState.COMPLETED);
         break;
+
+
+
       case "audio.onMute":
-        _state = AudioPlayerState.MUTE;
-        _playerStateController.add(AudioPlayerState.MUTE);
+        _playerControlController.add(AudioPlayerControlState.MUTE);
         break;
       case "audio.nextTrackCommand":
-        _playerStateController.add(AudioPlayerState.nextTrackCommand);
+        _playerControlController.add(AudioPlayerControlState.nextTrackCommand);
         break;
       case "audio.previousTrackCommand":
-        _playerStateController.add(AudioPlayerState.previousTrackCommand);
+        _playerControlController.add(AudioPlayerControlState.previousTrackCommand);
         break;
       case "audio.playCommand":
-        _playerStateController.add(AudioPlayerState.playCommand);
+        _playerControlController.add(AudioPlayerControlState.playCommand);
         break;
       case "audio.pauseCommand":
-        _playerStateController.add(AudioPlayerState.pauseCommand);
+        _playerControlController.add(AudioPlayerControlState.pauseCommand);
         break;
       case "audio.togglePlayPauseCommand":
-        _playerStateController.add(AudioPlayerState.togglePlayPauseCommand);
+        _playerControlController.add(AudioPlayerControlState.togglePlayPauseCommand);
         break;
+
 
       case "audio.onError":
         // If there's an error, we assume the player has stopped.

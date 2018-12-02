@@ -104,6 +104,8 @@ FlutterMethodChannel *_channel;
     m_Author=author;
     m_Name = name;
     m_AlbumName= albumName;
+    [AudioplayerPlugin configNowPlayingInfoCenter];
+    
     if (![url isEqualToString:lastUrl]) {
         [playerItem removeObserver:self
                         forKeyPath:@"player.currentItem.status"];
@@ -129,7 +131,7 @@ FlutterMethodChannel *_channel;
                                                                       }];
         [observers addObject:anobserver];
         
-        //处理电话打进时中断音乐播放
+        // on phone call
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(interruptionNotificationHandler:) name:AVAudioSessionInterruptionNotification object:nil];
  
         
@@ -210,7 +212,7 @@ FlutterMethodChannel *_channel;
     [playerItem seekToTime:time];
 }
 
-//来电中断处理
+//on phone call
 - (void)interruptionNotificationHandler:(NSNotification*)notification
 {
     NSDictionary *interuptionDict = notification.userInfo;
@@ -218,15 +220,13 @@ FlutterMethodChannel *_channel;
     NSUInteger interuptionType = [type integerValue];
     
     if (interuptionType == AVAudioSessionInterruptionTypeBegan) {
-        //获取中断前音乐是否在播放
         if(isPlaying)
         {
-            //停止播放的事件
             [self pause];
         }
-        NSLog(@"AVAudioSessionInterruptionTypeBegan");
+        //NSLog(@"AVAudioSessionInterruptionTypeBegan");
     }else if (interuptionType == AVAudioSessionInterruptionTypeEnded) {
-        NSLog(@"AVAudioSessionInterruptionTypeEnded");
+        //NSLog(@"AVAudioSessionInterruptionTypeEnded");
         if(!isPlaying){
             [self resume];
         }
@@ -237,11 +237,10 @@ FlutterMethodChannel *_channel;
 
 + (void)configNowPlayingInfoCenter
 {
-    NSLog(@"configNowPlayingInfoCenter");
+    //NSLog(@"configNowPlayingInfoCenter");
     Class playingInfoCenter = NSClassFromString(@"MPNowPlayingInfoCenter");
     if (playingInfoCenter) {
         NSMutableDictionary *songInfo = [[NSMutableDictionary alloc] init];
-        //歌曲名称
         [songInfo setObject:m_Name forKey:MPMediaItemPropertyTitle];
         //演唱者
         [songInfo setObject:m_Author forKey:MPMediaItemPropertyArtist];
@@ -286,7 +285,7 @@ FlutterMethodChannel *_channel;
 // 在需要处理远程控制事件的具体控制器或其它类中实现
 + (void)remoteControlEventHandler
 {
-    NSLog(@"remoteControlEventHandler");
+   // NSLog(@"remoteControlEventHandler");
     // 直接使用sharedCommandCenter来获取MPRemoteCommandCenter的shared实例
     MPRemoteCommandCenter *commandCenter = [MPRemoteCommandCenter sharedCommandCenter];
     // 启用播放命令 (锁屏界面和上拉快捷功能菜单处的播放按钮触发的命令)
