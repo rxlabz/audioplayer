@@ -7,6 +7,8 @@ enum AudioPlayerState {
   /// Player is stopped. No file is loaded to the player. Calling [resume] or
   /// [pause] will result in exception.
   STOPPED,
+  // Currently loading buffer
+  LOADING,
   /// Currently playing a file. The user can [pause], [resume] or [stop] the
   /// playback.
   PLAYING,
@@ -104,10 +106,16 @@ class AudioPlayer {
         assert(_state == AudioPlayerState.PLAYING);
         _positionController.add(new Duration(milliseconds: call.arguments));
         break;
+      case "audio.onLoading":
+        _state = AudioPlayerState.LOADING;
+        _playerStateController.add(AudioPlayerState.LOADING);
+        print("onLoading");
+        break;
       case "audio.onStart":
         _state = AudioPlayerState.PLAYING;
         _playerStateController.add(AudioPlayerState.PLAYING);
         _duration = new Duration(milliseconds: call.arguments);
+        print("onStart");
         break;
       case "audio.onPause":
         _state = AudioPlayerState.PAUSED;
@@ -121,9 +129,6 @@ class AudioPlayer {
         _state = AudioPlayerState.COMPLETED;
         _playerStateController.add(AudioPlayerState.COMPLETED);
         break;
-
-
-
       case "audio.onMute":
         _playerControlController.add(AudioPlayerControlState.MUTE);
         break;
@@ -142,8 +147,6 @@ class AudioPlayer {
       case "audio.togglePlayPauseCommand":
         _playerControlController.add(AudioPlayerControlState.togglePlayPauseCommand);
         break;
-
-
       case "audio.onError":
         // If there's an error, we assume the player has stopped.
         _state = AudioPlayerState.STOPPED;

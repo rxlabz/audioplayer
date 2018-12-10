@@ -34,6 +34,7 @@ static NSString *m_AlbumName=@"";
 CMTime position;
 NSString *lastUrl;
 BOOL lastMode;
+BOOL isLoading = false;
 BOOL isPlaying = false;
 NSMutableSet *observers;
 NSMutableSet *timeobservers;
@@ -104,8 +105,8 @@ FlutterMethodChannel *_channel;
     m_Author=author;
     m_Name = name;
     m_AlbumName= albumName;
-    [AudioplayerPlugin configNowPlayingInfoCenter];
-    
+    isLoading=true;
+
     if (![url isEqualToString:lastUrl]) {
         [playerItem removeObserver:self
                         forKeyPath:@"player.currentItem.status"];
@@ -155,14 +156,20 @@ FlutterMethodChannel *_channel;
                                   options:0
                                   context:nil];
     }
-    [self onStart];
+    [self onLoading];
     [player play];
     isPlaying = true;
 }
 
+- (void)onLoading{
+        [_channel invokeMethod:@"audio.onLoading" arguments:nil];
+}
+
+
 - (void)onStart {
     CMTime duration = [[player currentItem] duration];
     if (CMTimeGetSeconds(duration) > 0) {
+        isLoading = false;
         m_totalmseconds =CMTimeGetSeconds(duration);
         int mseconds=m_totalmseconds *1000;
         [AudioplayerPlugin configNowPlayingInfoCenter];
@@ -176,7 +183,9 @@ FlutterMethodChannel *_channel;
 - (void)onTimeInterval:(CMTime)time {
     m_mseconds=CMTimeGetSeconds(time);
     int mseconds = m_mseconds *1000;
-    
+    if (( isLoading ) && (mseconds > 0 )) {
+        [self onStart];
+    }
     [_channel invokeMethod:@"audio.onCurrentPosition" arguments:@(mseconds)];
 }
 
@@ -309,13 +318,11 @@ FlutterMethodChannel *_channel;
     [commandCenter.previousTrackCommand addTargetWithHandler:^MPRemoteCommandHandlerStatus(MPRemoteCommandEvent * _Nonnull event) {
         //点击了上一首
         [AudioplayerPlugin previousTrackCommand];
-        [self configNowPlayingInfoCenter];
         return MPRemoteCommandHandlerStatusSuccess;
     }];
     [commandCenter.nextTrackCommand addTargetWithHandler:^MPRemoteCommandHandlerStatus(MPRemoteCommandEvent * _Nonnull event) {
         //点击了下一首
         [AudioplayerPlugin nextTrackCommand];
-        [self configNowPlayingInfoCenter];
         return MPRemoteCommandHandlerStatusSuccess;
     }];
     // 启用耳机的播放/暂停命令 (耳机上的播放按钮触发的命令)
