@@ -129,6 +129,9 @@ class AudioPlayer {
         _state = AudioPlayerState.COMPLETED;
         _playerStateController.add(AudioPlayerState.COMPLETED);
         break;
+
+
+
       case "audio.onMute":
         _playerControlController.add(AudioPlayerControlState.MUTE);
         break;

@@ -106,6 +106,7 @@ FlutterMethodChannel *_channel;
     m_Name = name;
     m_AlbumName= albumName;
     isLoading=true;
+    [AudioplayerPlugin configNowPlayingInfoCenter];
 
     if (![url isEqualToString:lastUrl]) {
         [playerItem removeObserver:self
@@ -132,7 +133,7 @@ FlutterMethodChannel *_channel;
                                                                       }];
         [observers addObject:anobserver];
         
-        //处理电话打进时中断音乐播放
+        // on phone call
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(interruptionNotificationHandler:) name:AVAudioSessionInterruptionNotification object:nil];
  
         
@@ -221,7 +222,7 @@ FlutterMethodChannel *_channel;
     [playerItem seekToTime:time];
 }
 
-//来电中断处理
+//on phone call
 - (void)interruptionNotificationHandler:(NSNotification*)notification
 {
     NSDictionary *interuptionDict = notification.userInfo;
@@ -229,10 +230,8 @@ FlutterMethodChannel *_channel;
     NSUInteger interuptionType = [type integerValue];
     
     if (interuptionType == AVAudioSessionInterruptionTypeBegan) {
-        //获取中断前音乐是否在播放
         if(isPlaying)
         {
-            //停止播放的事件
             [self pause];
         }
         //NSLog(@"AVAudioSessionInterruptionTypeBegan");
@@ -252,7 +251,6 @@ FlutterMethodChannel *_channel;
     Class playingInfoCenter = NSClassFromString(@"MPNowPlayingInfoCenter");
     if (playingInfoCenter) {
         NSMutableDictionary *songInfo = [[NSMutableDictionary alloc] init];
-        //歌曲名称
         [songInfo setObject:m_Name forKey:MPMediaItemPropertyTitle];
         //演唱者
         [songInfo setObject:m_Author forKey:MPMediaItemPropertyArtist];
