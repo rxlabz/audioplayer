@@ -104,6 +104,8 @@ public class AudioplayerPlugin implements MethodCallHandler {
       mediaPlayer = new MediaPlayer();
       mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
 
+      channel.invokeMethod("audio.onLoading",null);
+
       try {
         mediaPlayer.setDataSource(url);
       } catch (IOException e) {
@@ -113,6 +115,7 @@ public class AudioplayerPlugin implements MethodCallHandler {
       }
 
       mediaPlayer.prepareAsync();
+
 
       mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener(){
         @Override
@@ -138,8 +141,10 @@ public class AudioplayerPlugin implements MethodCallHandler {
         }
       });
     } else {
+
       mediaPlayer.start();
       channel.invokeMethod("audio.onStart", mediaPlayer.getDuration());
+
     }
     handler.post(sendData);
   }
