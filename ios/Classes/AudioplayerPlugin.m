@@ -180,7 +180,6 @@ FlutterMethodChannel *_channel;
 
 
 
-
 - (void)onTimeInterval:(CMTime)time {
     m_mseconds=CMTimeGetSeconds(time);
     int mseconds = m_mseconds *1000;

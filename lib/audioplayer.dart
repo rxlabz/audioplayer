@@ -109,13 +109,11 @@ class AudioPlayer {
       case "audio.onLoading":
         _state = AudioPlayerState.LOADING;
         _playerStateController.add(AudioPlayerState.LOADING);
-        print("onLoading");
         break;
       case "audio.onStart":
         _state = AudioPlayerState.PLAYING;
         _playerStateController.add(AudioPlayerState.PLAYING);
         _duration = new Duration(milliseconds: call.arguments);
-        print("onStart");
         break;
       case "audio.onPause":
         _state = AudioPlayerState.PAUSED;
@@ -129,9 +127,6 @@ class AudioPlayer {
         _state = AudioPlayerState.COMPLETED;
         _playerStateController.add(AudioPlayerState.COMPLETED);
         break;
-
-
-
       case "audio.onMute":
         _playerControlController.add(AudioPlayerControlState.MUTE);
         break;
