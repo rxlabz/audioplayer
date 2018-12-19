@@ -27,6 +27,7 @@ public class AudioplayerPlugin implements MethodCallHandler {
   private final Handler handler = new Handler();
   private MediaPlayer mediaPlayer;
 
+
   public static void registerWith(Registrar registrar) {
     final MethodChannel channel = new MethodChannel(registrar.messenger(), ID);
     channel.setMethodCallHandler(new AudioplayerPlugin(registrar, channel));
@@ -38,6 +39,42 @@ public class AudioplayerPlugin implements MethodCallHandler {
     Context context = registrar.context().getApplicationContext();
     this.am = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
   }
+
+
+  /**
+   * 焦点变化监听器
+   */
+  private AudioManager.OnAudioFocusChangeListener mAudioFocusChange = new AudioManager.OnAudioFocusChangeListener() {
+    @Override
+    public void onAudioFocusChange(int focusChange) {
+        String TAG="AudioManager";
+      switch (focusChange){
+        case AudioManager.AUDIOFOCUS_LOSS:
+          //长时间丢失焦点
+          Log.d(TAG, "AUDIOFOCUS_LOSS");
+          //释放焦点
+          am.abandonAudioFocus(mAudioFocusChange);
+          channel.invokeMethod("audio.AUDIOFOCUS_LOSS", null);
+          break;
+        case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
+          //短暂性丢失焦点
+          Log.d(TAG, "AUDIOFOCUS_LOSS_TRANSIENT");
+          channel.invokeMethod("audio.AUDIOFOCUS_LOSS_TRANSIENT", null);
+          break;
+        case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK:
+          //短暂性丢失焦点并作降音处理
+          Log.d(TAG, "AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK");
+          channel.invokeMethod("audio.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK", null);
+          break;
+        case AudioManager.AUDIOFOCUS_GAIN:
+          //重新获得焦点
+          channel.invokeMethod("audio.AUDIOFOCUS_GAIN", null);
+          Log.d(TAG, "AUDIOFOCUS_GAIN");
+          break;
+      }
+    }
+  };
+
 
   @Override
   public void onMethodCall(MethodCall call, MethodChannel.Result response) {
@@ -87,6 +124,7 @@ public class AudioplayerPlugin implements MethodCallHandler {
       mediaPlayer.stop();
       mediaPlayer.release();
       mediaPlayer = null;
+      am.requestAudioFocus(mAudioFocusChange, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
       channel.invokeMethod("audio.onStop", null);
     }
   }
@@ -102,7 +140,9 @@ public class AudioplayerPlugin implements MethodCallHandler {
   private void play(String url) {
     if (mediaPlayer == null) {
       mediaPlayer = new MediaPlayer();
+      am.requestAudioFocus(mAudioFocusChange, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
       mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+
 
       channel.invokeMethod("audio.onLoading",null);
 
@@ -141,10 +181,9 @@ public class AudioplayerPlugin implements MethodCallHandler {
         }
       });
     } else {
-
+        //直接播放
       mediaPlayer.start();
       channel.invokeMethod("audio.onStart", mediaPlayer.getDuration());
-
     }
     handler.post(sendData);
   }

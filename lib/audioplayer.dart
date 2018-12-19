@@ -29,6 +29,12 @@ enum AudioPlayerControlState{
   playCommand,
   pauseCommand,
   togglePlayPauseCommand,
+
+  AUDIOFOCUS_LOSS,
+  AUDIOFOCUS_LOSS_TRANSIENT,
+  AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK,
+  AUDIOFOCUS_GAIN,
+
 }
 
 const MethodChannel _channel =
@@ -144,6 +150,21 @@ class AudioPlayer {
         break;
       case "audio.togglePlayPauseCommand":
         _playerControlController.add(AudioPlayerControlState.togglePlayPauseCommand);
+        break;
+
+      case "audio.AUDIOFOCUS_LOSS":
+        _playerControlController.add(AudioPlayerControlState.AUDIOFOCUS_LOSS);
+        break;
+
+      case "audio.AUDIOFOCUS_LOSS_TRANSIENT":
+        _playerControlController.add(AudioPlayerControlState.AUDIOFOCUS_LOSS_TRANSIENT);
+        break;
+      case "audio.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK":
+        _playerControlController.add(AudioPlayerControlState.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK);
+        break;
+
+      case "audio.AUDIOFOCUS_GAIN":
+        _playerControlController.add(AudioPlayerControlState.AUDIOFOCUS_GAIN);
         break;
       case "audio.onError":
         // If there's an error, we assume the player has stopped.
