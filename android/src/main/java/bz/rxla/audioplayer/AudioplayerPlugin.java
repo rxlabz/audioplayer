@@ -1,5 +1,5 @@
 package bz.rxla.audioplayer;
-
+import android.media.AudioAttributes;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.Handler;
@@ -138,69 +138,78 @@ public class AudioplayerPlugin implements MethodCallHandler {
   }
 
   private void play(String url) {
-    if (mediaPlayer == null) {
-      mediaPlayer = new MediaPlayer();
-      am.requestAudioFocus(mAudioFocusChange, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
-      mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+
+      if (mediaPlayer == null) {
+          mediaPlayer = new MediaPlayer();
+          am.requestAudioFocus(mAudioFocusChange, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
 
 
-      channel.invokeMethod("audio.onLoading",null);
+          AudioAttributes audioAttribute = new AudioAttributes.Builder()
+              .setUsage(AudioAttributes.USAGE_MEDIA)
+              .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+              .build();
 
-      try {
-        mediaPlayer.setDataSource(url);
-      } catch (IOException e) {
-        Log.w(ID, "Invalid DataSource", e);
-        channel.invokeMethod("audio.onError", "Invalid Datasource");
-        return;
-      }
-
-      mediaPlayer.prepareAsync();
+          mediaPlayer.setAudioAttributes(audioAttribute);
+          //mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
 
 
-      mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener(){
-        @Override
-        public void onPrepared(MediaPlayer mp) {
+          channel.invokeMethod("audio.onLoading",null);
+
+          try {
+              mediaPlayer.setDataSource(url);
+          } catch (IOException e) {
+              Log.w(ID, "Invalid DataSource", e);
+              channel.invokeMethod("audio.onError", "Invalid Datasource");
+              return;
+          }
+
+          mediaPlayer.prepareAsync();
+
+
+          mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener(){
+              @Override
+              public void onPrepared(MediaPlayer mp) {
+                  mediaPlayer.start();
+                  channel.invokeMethod("audio.onStart", mediaPlayer.getDuration());
+              }
+          });
+
+          mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener(){
+              @Override
+              public void onCompletion(MediaPlayer mp) {
+                  stop();
+                  channel.invokeMethod("audio.onComplete", null);
+              }
+          });
+
+          mediaPlayer.setOnErrorListener(new MediaPlayer.OnErrorListener(){
+              @Override
+              public boolean onError(MediaPlayer mp, int what, int extra) {
+                  channel.invokeMethod("audio.onError", String.format("{\"what\":%d,\"extra\":%d}", what, extra));
+                  return true;
+              }
+          });
+      } else {
+          //直接播放
           mediaPlayer.start();
           channel.invokeMethod("audio.onStart", mediaPlayer.getDuration());
-        }
-      });
-
-      mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener(){
-        @Override
-        public void onCompletion(MediaPlayer mp) {
-          stop();
-          channel.invokeMethod("audio.onComplete", null);
-        }
-      });
-
-      mediaPlayer.setOnErrorListener(new MediaPlayer.OnErrorListener(){
-        @Override
-        public boolean onError(MediaPlayer mp, int what, int extra) {
-          channel.invokeMethod("audio.onError", String.format("{\"what\":%d,\"extra\":%d}", what, extra));
-          return true;
-        }
-      });
-    } else {
-        //直接播放
-      mediaPlayer.start();
-      channel.invokeMethod("audio.onStart", mediaPlayer.getDuration());
-    }
-    handler.post(sendData);
+      }
+      handler.post(sendData);
   }
 
   private final Runnable sendData = new Runnable(){
-    public void run(){
-      try {
-        if (!mediaPlayer.isPlaying()) {
-          handler.removeCallbacks(sendData);
-        }
-        int time = mediaPlayer.getCurrentPosition();
-        channel.invokeMethod("audio.onCurrentPosition", time);
-        handler.postDelayed(this, 200);
+      public void run(){
+          try {
+              if (!mediaPlayer.isPlaying()) {
+                  handler.removeCallbacks(sendData);
+              }
+              int time = mediaPlayer.getCurrentPosition();
+              channel.invokeMethod("audio.onCurrentPosition", time);
+              handler.postDelayed(this, 200);
+          }
+          catch (Exception e) {
+              Log.w(ID, "When running handler", e);
+          }
       }
-      catch (Exception e) {
-        Log.w(ID, "When running handler", e);
-      }
-    }
   };
 }
