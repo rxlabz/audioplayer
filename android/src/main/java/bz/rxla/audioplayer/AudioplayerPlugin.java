@@ -1,5 +1,5 @@
 package bz.rxla.audioplayer;
-
+import android.media.AudioAttributes;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.Handler;
@@ -27,6 +27,7 @@ public class AudioplayerPlugin implements MethodCallHandler {
   private final Handler handler = new Handler();
   private MediaPlayer mediaPlayer;
 
+
   public static void registerWith(Registrar registrar) {
     final MethodChannel channel = new MethodChannel(registrar.messenger(), ID);
     channel.setMethodCallHandler(new AudioplayerPlugin(registrar, channel));
@@ -38,6 +39,42 @@ public class AudioplayerPlugin implements MethodCallHandler {
     Context context = registrar.context().getApplicationContext();
     this.am = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
   }
+
+
+  /**
+   * 焦点变化监听器
+   */
+  private AudioManager.OnAudioFocusChangeListener mAudioFocusChange = new AudioManager.OnAudioFocusChangeListener() {
+    @Override
+    public void onAudioFocusChange(int focusChange) {
+        String TAG="AudioManager";
+      switch (focusChange){
+        case AudioManager.AUDIOFOCUS_LOSS:
+          //长时间丢失焦点
+          Log.d(TAG, "AUDIOFOCUS_LOSS");
+          //释放焦点
+          am.abandonAudioFocus(mAudioFocusChange);
+          channel.invokeMethod("audio.AUDIOFOCUS_LOSS", null);
+          break;
+        case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
+          //短暂性丢失焦点
+          Log.d(TAG, "AUDIOFOCUS_LOSS_TRANSIENT");
+          channel.invokeMethod("audio.AUDIOFOCUS_LOSS_TRANSIENT", null);
+          break;
+        case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK:
+          //短暂性丢失焦点并作降音处理
+          Log.d(TAG, "AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK");
+          channel.invokeMethod("audio.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK", null);
+          break;
+        case AudioManager.AUDIOFOCUS_GAIN:
+          //重新获得焦点
+          channel.invokeMethod("audio.AUDIOFOCUS_GAIN", null);
+          Log.d(TAG, "AUDIOFOCUS_GAIN");
+          break;
+      }
+    }
+  };
+
 
   @Override
   public void onMethodCall(MethodCall call, MethodChannel.Result response) {
@@ -87,6 +124,7 @@ public class AudioplayerPlugin implements MethodCallHandler {
       mediaPlayer.stop();
       mediaPlayer.release();
       mediaPlayer = null;
+      am.requestAudioFocus(mAudioFocusChange, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
       channel.invokeMethod("audio.onStop", null);
     }
   }
@@ -100,63 +138,78 @@ public class AudioplayerPlugin implements MethodCallHandler {
   }
 
   private void play(String url) {
-    if (mediaPlayer == null) {
-      mediaPlayer = new MediaPlayer();
-      mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
 
-      try {
-        mediaPlayer.setDataSource(url);
-      } catch (IOException e) {
-        Log.w(ID, "Invalid DataSource", e);
-        channel.invokeMethod("audio.onError", "Invalid Datasource");
-        return;
-      }
+      if (mediaPlayer == null) {
+          mediaPlayer = new MediaPlayer();
+          am.requestAudioFocus(mAudioFocusChange, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
 
-      mediaPlayer.prepareAsync();
 
-      mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener(){
-        @Override
-        public void onPrepared(MediaPlayer mp) {
+          AudioAttributes audioAttribute = new AudioAttributes.Builder()
+              .setUsage(AudioAttributes.USAGE_MEDIA)
+              .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+              .build();
+
+          mediaPlayer.setAudioAttributes(audioAttribute);
+          //mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+
+
+          channel.invokeMethod("audio.onLoading",null);
+
+          try {
+              mediaPlayer.setDataSource(url);
+          } catch (IOException e) {
+              Log.w(ID, "Invalid DataSource", e);
+              channel.invokeMethod("audio.onError", "Invalid Datasource");
+              return;
+          }
+
+          mediaPlayer.prepareAsync();
+
+
+          mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener(){
+              @Override
+              public void onPrepared(MediaPlayer mp) {
+                  mediaPlayer.start();
+                  channel.invokeMethod("audio.onStart", mediaPlayer.getDuration());
+              }
+          });
+
+          mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener(){
+              @Override
+              public void onCompletion(MediaPlayer mp) {
+                  stop();
+                  channel.invokeMethod("audio.onComplete", null);
+              }
+          });
+
+          mediaPlayer.setOnErrorListener(new MediaPlayer.OnErrorListener(){
+              @Override
+              public boolean onError(MediaPlayer mp, int what, int extra) {
+                  channel.invokeMethod("audio.onError", String.format("{\"what\":%d,\"extra\":%d}", what, extra));
+                  return true;
+              }
+          });
+      } else {
+          //直接播放
           mediaPlayer.start();
           channel.invokeMethod("audio.onStart", mediaPlayer.getDuration());
-        }
-      });
-
-      mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener(){
-        @Override
-        public void onCompletion(MediaPlayer mp) {
-          stop();
-          channel.invokeMethod("audio.onComplete", null);
-        }
-      });
-
-      mediaPlayer.setOnErrorListener(new MediaPlayer.OnErrorListener(){
-        @Override
-        public boolean onError(MediaPlayer mp, int what, int extra) {
-          channel.invokeMethod("audio.onError", String.format("{\"what\":%d,\"extra\":%d}", what, extra));
-          return true;
-        }
-      });
-    } else {
-      mediaPlayer.start();
-      channel.invokeMethod("audio.onStart", mediaPlayer.getDuration());
-    }
-    handler.post(sendData);
+      }
+      handler.post(sendData);
   }
 
   private final Runnable sendData = new Runnable(){
-    public void run(){
-      try {
-        if (!mediaPlayer.isPlaying()) {
-          handler.removeCallbacks(sendData);
-        }
-        int time = mediaPlayer.getCurrentPosition();
-        channel.invokeMethod("audio.onCurrentPosition", time);
-        handler.postDelayed(this, 200);
+      public void run(){
+          try {
+              if (!mediaPlayer.isPlaying()) {
+                  handler.removeCallbacks(sendData);
+              }
+              int time = mediaPlayer.getCurrentPosition();
+              channel.invokeMethod("audio.onCurrentPosition", time);
+              handler.postDelayed(this, 200);
+          }
+          catch (Exception e) {
+              Log.w(ID, "When running handler", e);
+          }
       }
-      catch (Exception e) {
-        Log.w(ID, "When running handler", e);
-      }
-    }
   };
 }

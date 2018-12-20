@@ -66,6 +66,7 @@ class _AudioAppState extends State<AudioApp> {
         .listen((p) => setState(() => position = p));
     _audioPlayerStateSubscription =
         audioPlayer.onPlayerStateChanged.listen((s) {
+          print(s);
       if (s == AudioPlayerState.PLAYING) {
         setState(() => duration = audioPlayer.duration);
       } else if (s == AudioPlayerState.STOPPED) {
@@ -84,7 +85,7 @@ class _AudioAppState extends State<AudioApp> {
   }
 
   Future play() async {
-    await audioPlayer.play(kUrl);
+    await audioPlayer.play(kUrl,name: "我也不知道");
     setState(() {
       playerState = PlayerState.playing;
     });

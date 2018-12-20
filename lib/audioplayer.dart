@@ -7,6 +7,8 @@ enum AudioPlayerState {
   /// Player is stopped. No file is loaded to the player. Calling [resume] or
   /// [pause] will result in exception.
   STOPPED,
+  // Currently loading buffer
+  LOADING,
   /// Currently playing a file. The user can [pause], [resume] or [stop] the
   /// playback.
   PLAYING,
@@ -16,6 +18,23 @@ enum AudioPlayerState {
   /// however we differentiate it because some clients might want to know when
   /// the playback is done versus when the user has stopped the playback.
   COMPLETED,
+
+
+}
+
+enum AudioPlayerControlState{
+  MUTE,
+  nextTrackCommand,
+  previousTrackCommand,
+  playCommand,
+  pauseCommand,
+  togglePlayPauseCommand,
+
+  AUDIOFOCUS_LOSS,
+  AUDIOFOCUS_LOSS_TRANSIENT,
+  AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK,
+  AUDIOFOCUS_GAIN,
+
 }
 
 const MethodChannel _channel =
@@ -32,6 +51,9 @@ class AudioPlayer {
   final StreamController<AudioPlayerState> _playerStateController =
       new StreamController.broadcast();
 
+  final StreamController<AudioPlayerControlState> _playerControlController =
+  new StreamController.broadcast();
+
   final StreamController<Duration> _positionController =
       new StreamController.broadcast();
 
@@ -43,9 +65,16 @@ class AudioPlayer {
   }
 
   /// Play a given url.
-  Future<void> play(String url, {bool isLocal: false}) async =>
-      await _channel.invokeMethod('play', {'url': url, 'isLocal': isLocal});
-
+  Future<void> play(String url, {bool isLocal: false ,
+    String author:"" ,
+    String name:"",
+    String albumName:""
+  }) async =>
+      await _channel.invokeMethod('play', {'url': url, 'isLocal': isLocal,
+        'author' :author,
+        'name' : name,
+        'albumName':albumName
+      });
   /// Pause the currently playing stream.
   Future<void> pause() async => await _channel.invokeMethod('pause');
 
@@ -60,6 +89,8 @@ class AudioPlayer {
 
   /// Stream for subscribing to player state change events.
   Stream<AudioPlayerState> get onPlayerStateChanged => _playerStateController.stream;
+  Stream<AudioPlayerControlState> get onPlayerControlChanged => _playerControlController.stream;
+
 
   /// Reports what the player is currently doing.
   AudioPlayerState get state => _state;
@@ -81,6 +112,10 @@ class AudioPlayer {
         assert(_state == AudioPlayerState.PLAYING);
         _positionController.add(new Duration(milliseconds: call.arguments));
         break;
+      case "audio.onLoading":
+        _state = AudioPlayerState.LOADING;
+        _playerStateController.add(AudioPlayerState.LOADING);
+        break;
       case "audio.onStart":
         _state = AudioPlayerState.PLAYING;
         _playerStateController.add(AudioPlayerState.PLAYING);
@@ -98,6 +133,39 @@ class AudioPlayer {
         _state = AudioPlayerState.COMPLETED;
         _playerStateController.add(AudioPlayerState.COMPLETED);
         break;
+      case "audio.onMute":
+        _playerControlController.add(AudioPlayerControlState.MUTE);
+        break;
+      case "audio.nextTrackCommand":
+        _playerControlController.add(AudioPlayerControlState.nextTrackCommand);
+        break;
+      case "audio.previousTrackCommand":
+        _playerControlController.add(AudioPlayerControlState.previousTrackCommand);
+        break;
+      case "audio.playCommand":
+        _playerControlController.add(AudioPlayerControlState.playCommand);
+        break;
+      case "audio.pauseCommand":
+        _playerControlController.add(AudioPlayerControlState.pauseCommand);
+        break;
+      case "audio.togglePlayPauseCommand":
+        _playerControlController.add(AudioPlayerControlState.togglePlayPauseCommand);
+        break;
+
+      case "audio.AUDIOFOCUS_LOSS":
+        _playerControlController.add(AudioPlayerControlState.AUDIOFOCUS_LOSS);
+        break;
+
+      case "audio.AUDIOFOCUS_LOSS_TRANSIENT":
+        _playerControlController.add(AudioPlayerControlState.AUDIOFOCUS_LOSS_TRANSIENT);
+        break;
+      case "audio.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK":
+        _playerControlController.add(AudioPlayerControlState.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK);
+        break;
+
+      case "audio.AUDIOFOCUS_GAIN":
+        _playerControlController.add(AudioPlayerControlState.AUDIOFOCUS_GAIN);
+        break;
       case "audio.onError":
         // If there's an error, we assume the player has stopped.
         _state = AudioPlayerState.STOPPED;
@@ -111,3 +179,4 @@ class AudioPlayer {
     }
   }
 }
+
