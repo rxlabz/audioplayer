@@ -107,6 +107,7 @@ public class AudioplayerPlugin implements MethodCallHandler {
     handler.removeCallbacks(sendData);
     if (mediaPlayer != null) {
       mediaPlayer.stop();
+      mediaPlayer.reset();
       mediaPlayer.release();
       mediaPlayer = null;
     }
