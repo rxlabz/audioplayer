@@ -52,6 +52,9 @@ class AudioPlayer {
   /// Stop the currently playing stream.
   Future<void> stop() async => await _channel.invokeMethod('stop');
 
+  /// Changes audio playback speed
+  Future<void> changeSpeed(double value) async => await _channel.invokeMethod('changeSpeed', value);
+
   /// Mute sound.
   Future<void> mute(bool muted) async => await _channel.invokeMethod('mute', muted);
 
