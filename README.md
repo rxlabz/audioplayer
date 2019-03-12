@@ -34,7 +34,8 @@ To use this plugin :
 
 ```dart
 //...
-AudioPlayer audioPlugin = new AudioPlayer();
+AudioPlayer audioPlayer = new AudioPlayer();
+AudioPlayerState audioPlayerState = new AudioPlayerState();
 //...
 ```
 
@@ -43,18 +44,18 @@ AudioPlayer audioPlugin = new AudioPlayer();
 ```dart
 Future<void> play() async {
   await audioPlayer.play(kUrl);
-  setState(() => playerState = PlayerState.playing);
+  setState(() => audioPlayerState = AudioPlayerState.PLAYING);
 }
 
 Future<void> pause() async {
   await audioPlayer.pause();
-  setState(() => playerState = PlayerState.paused);
+  setState(() => audioPlayerState = AudioPlayerState.PAUSED);
 }
 
 Future<void> stop() async {
   await audioPlayer.stop();
   setState(() {
-    playerState = PlayerState.stopped;
+    audioPlayerState = AudioPlayerState.STOPPED;
     position = new Duration();
   });
 }
@@ -82,7 +83,7 @@ _audioPlayerStateSubscription = audioPlayer.onPlayerStateChanged.listen((s) {
   }
 }, onError: (msg) {
   setState(() {
-    playerState = PlayerState.stopped;
+    audioPlayerState = AudioPlayerState.stopped;
     duration = new Duration(seconds: 0);
     position = new Duration(seconds: 0);
   });
