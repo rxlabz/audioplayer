@@ -84,7 +84,7 @@ class _AudioAppState extends State<AudioApp> {
   }
 
   Future play() async {
-    await audioPlayer.play(kUrl);
+    await audioPlayer.play("https://5a6872aace0ce.streamlock.net/nghevov3/vov3.stream_aac/chunklist_w981158175.m3u8");
     setState(() {
       playerState = PlayerState.playing;
     });
