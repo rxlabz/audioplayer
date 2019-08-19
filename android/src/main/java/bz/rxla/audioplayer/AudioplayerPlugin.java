@@ -2,6 +2,7 @@ package bz.rxla.audioplayer;
 
 import android.media.AudioManager;
 import android.media.MediaPlayer;
+import android.media.AudioAttributes;
 import android.os.Handler;
 import android.util.Log;
 import io.flutter.plugin.common.MethodChannel;
@@ -98,7 +99,7 @@ public class AudioplayerPlugin implements MethodCallHandler {
 
   private void changeSpeed(double value){
     handler.removeCallbacks(sendData);
-    if (mediaPlayer != null && android.os.Build.VERSION.SDK_INT>23) {
+    if (mediaPlayer != null && android.os.Build.VERSION.SDK_INT>=23) {
       mediaPlayer.setPlaybackParams(mediaPlayer.getPlaybackParams().setSpeed((float) value));
     }
 
@@ -113,12 +114,20 @@ public class AudioplayerPlugin implements MethodCallHandler {
   }
 
   private void play(String url) {
+
     if (mediaPlayer == null) {
       mediaPlayer = new MediaPlayer();
-      mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+      AudioAttributes audioAttribute = new AudioAttributes.Builder()
+              .setUsage(AudioAttributes.USAGE_MEDIA)
+              .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+              .build();
+
+      mediaPlayer.setAudioAttributes(audioAttribute);
 
       try {
-        mediaPlayer.setDataSource(url);
+        if(url!="")
+
+          mediaPlayer.setDataSource(url);
       } catch (IOException e) {
         Log.w(ID, "Invalid DataSource", e);
         channel.invokeMethod("audio.onError", "Invalid Datasource");
@@ -138,8 +147,8 @@ public class AudioplayerPlugin implements MethodCallHandler {
       mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener(){
         @Override
         public void onCompletion(MediaPlayer mp) {
-          stop();
           channel.invokeMethod("audio.onComplete", null);
+          stop();
         }
       });
 
