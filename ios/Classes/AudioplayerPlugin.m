@@ -47,6 +47,7 @@ FlutterMethodChannel *_channel;
                                      binaryMessenger:[registrar messenger]];
     AudioplayerPlugin* instance = [[AudioplayerPlugin alloc] init];
     [registrar addMethodCallDelegate:instance channel:channel];
+
     _channel = channel;
     [AudioplayerPlugin remoteControlEventHandler];
 
@@ -76,6 +77,12 @@ FlutterMethodChannel *_channel;
                                       [self stop];
                                       result(nil);
                                   },
+                              @"kill":
+                                  ^{
+                                      [self kill];
+                                      result(nil);
+                                  },
+
                               @"mute":
                                   ^{
                                       [self mute:[call.arguments boolValue]];
@@ -112,7 +119,15 @@ FlutterMethodChannel *_channel;
     m_Name = name;
     m_AlbumName= albumName;
     isLoading=true;
-    [AudioplayerPlugin configNowPlayingInfoCenter];
+        NSError *error = nil;
+        BOOL success = [[AVAudioSession sharedInstance]
+                        setCategory:AVAudioSessionCategoryPlayback
+                        error:&error];
+        if (!success) {
+            NSLog(@"Error setting speaker");
+
+        }
+	// End fix
 
     if (![url isEqualToString:lastUrl]) {
         [playerItem removeObserver:self
@@ -142,6 +157,7 @@ FlutterMethodChannel *_channel;
         // on phone call
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(interruptionNotificationHandler:) name:AVAudioSessionInterruptionNotification object:nil];
 
+        playerItem.audioTimePitchAlgorithm = AVAudioTimePitchAlgorithmTimeDomain;
 
         if (player) {
             [player replaceCurrentItemWithPlayerItem:playerItem];
@@ -213,12 +229,33 @@ FlutterMethodChannel *_channel;
     [_channel invokeMethod:@"audio.onResume" arguments:nil];
 }
 
+- (void)kill {
+    if (isPlaying) {
+        [player pause];
+        isPlaying = false;
+    }
+    [player replaceCurrentItemWithPlayerItem: nil];
+    lastUrl = nil; // In case play the same url/file again, AVPlayerItem needs to be recreated.
+    isPlaying = false;
+    NSLog(@"stop");
+    Class playingInfoCenter = NSClassFromString(@"MPNowPlayingInfoCenter");
+    if (playingInfoCenter) {
+        [[MPNowPlayingInfoCenter defaultCenter] setNowPlayingInfo:nil];
+    }
+    player=nil;
+    [[UIApplication sharedApplication] endReceivingRemoteControlEvents];
+}
+
 - (void)stop {
     if (isPlaying) {
         [player pause];
         isPlaying = false;
     }
-    [playerItem seekToTime:CMTimeMake(0, 1)];
+    [player replaceCurrentItemWithPlayerItem: nil];
+    lastUrl = nil; // In case play the same url/file again, AVPlayerItem needs to be recreated.
+    isPlaying = false;
+    NSLog(@"stop");
+
     [_channel invokeMethod:@"audio.onStop" arguments:nil];
 }
 
@@ -245,9 +282,6 @@ FlutterMethodChannel *_channel;
             [self pause];
         }
     }else if (interuptionType == AVAudioSessionInterruptionTypeEnded) {
-        if(!isPlaying){
-            [self resume];
-        }
 
     }
 }
