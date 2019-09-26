@@ -11,10 +11,12 @@ import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.PluginRegistry.Registrar;
 
 import java.io.IOException;
+import java.util.Map;
 import java.util.HashMap;
 
 import android.content.Context;
 import android.os.Build;
+import android.net.Uri;
 
 /**
  * Android implementation for AudioPlayerPlugin.
@@ -103,15 +105,15 @@ public class AudioplayerPlugin implements MethodCallHandler {
     if (mediaPlayer == null) {
       mediaPlayer = new MediaPlayer();
 	  
-	  // Ìí¼ÓÇëÇóÍ·¡£Èç¹û¶à¸öurl¶ÔÓ¦¶à¸ö²»Í¬ÇëÇóÍ·£¬ĞèÒªÅĞ¶Ïurl£¬Ê±¼ä¹ØÏµÕâÀïÃ»Ğ´
-	  ////////////// ¸Ä¶¯   Start
+	  // æ·»åŠ è¯·æ±‚å¤´ã€‚å¦‚æœå¤šä¸ªurlå¯¹åº”å¤šä¸ªä¸åŒè¯·æ±‚å¤´ï¼Œéœ€è¦åˆ¤æ–­urlï¼Œæ—¶é—´å…³ç³»è¿™é‡Œæ²¡å†™
+	  ////////////// æ”¹åŠ¨   Start
 	  Uri uri = Uri.parse(url);
       Map<String, String> headers = new HashMap<>();
       headers.put("sencoder", "hevc");
       Map<String, String> headers = new HashMap<String, String>();
       headers.put("User-Agent", "My custom User Agent name");
       mMediaPlayer.setDataSource(getApplicationContext(), uri, headers);
-	  ////////////// ¸Ä¶¯  End
+	  ////////////// æ”¹åŠ¨  End
 	  
 	  
       mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
