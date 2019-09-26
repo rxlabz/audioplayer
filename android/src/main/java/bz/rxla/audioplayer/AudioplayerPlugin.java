@@ -102,6 +102,18 @@ public class AudioplayerPlugin implements MethodCallHandler {
   private void play(String url) {
     if (mediaPlayer == null) {
       mediaPlayer = new MediaPlayer();
+	  
+	  // 添加请求头。如果多个url对应多个不同请求头，需要判断url，时间关系这里没写
+	  ////////////// 改动   Start
+	  Uri uri = Uri.parse(url);
+      Map<String, String> headers = new HashMap<>();
+      headers.put("sencoder", "hevc");
+      Map<String, String> headers = new HashMap<String, String>();
+      headers.put("User-Agent", "My custom User Agent name");
+      mMediaPlayer.setDataSource(getApplicationContext(), uri, headers);
+	  ////////////// 改动  End
+	  
+	  
       mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
 
       try {
