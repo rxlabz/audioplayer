@@ -76,8 +76,10 @@ class AudioPlayer {
   Stream<Duration> get onAudioPositionChanged => _positionController.stream;
 
   Future<void> _audioPlayerStateChange(MethodCall call) async {
+//    print('callback method: ${call.method}');
     switch (call.method) {
       case "audio.onCurrentPosition":
+//        print('audio.onCurrentPosition: ${call.arguments}');
         assert(_state == AudioPlayerState.PLAYING);
         _positionController.add(new Duration(milliseconds: call.arguments));
         break;

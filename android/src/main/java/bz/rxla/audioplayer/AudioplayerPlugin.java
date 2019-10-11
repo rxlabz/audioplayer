@@ -1,20 +1,16 @@
 package bz.rxla.audioplayer;
 
+import android.content.Context;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
+import android.os.Build;
 import android.os.Handler;
 import android.util.Log;
+import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
-import io.flutter.plugin.common.MethodChannel.Result;
-import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.PluginRegistry.Registrar;
-
 import java.io.IOException;
-import java.util.HashMap;
-
-import android.content.Context;
-import android.os.Build;
 
 /**
  * Android implementation for AudioPlayerPlugin.
@@ -43,7 +39,12 @@ public class AudioplayerPlugin implements MethodCallHandler {
   public void onMethodCall(MethodCall call, MethodChannel.Result response) {
     switch (call.method) {
       case "play":
-        play(call.argument("url").toString());
+        Object url = call.argument("url");
+        if (url instanceof String) {
+          play((String) url);
+        } else {
+          play("");
+        }
         response.success(null);
         break;
       case "pause":
