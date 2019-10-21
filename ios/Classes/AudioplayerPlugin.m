@@ -46,6 +46,7 @@ FlutterMethodChannel *_channel;
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(pause) name:MEDIA_ACTION_PAUSE object:nil];
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(play) name:MEDIA_ACTION_PLAY object:nil];
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(stop) name:MEDIA_ACTION_STOP object:nil];
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(changeItem:) name:MEDIA_ACTION_CHANGE_ITEM object:nil];
     }
     return self;
 }
@@ -148,17 +149,17 @@ FlutterMethodChannel *_channel;
     isPlaying = true;
 }
 
+- (void)onTimeInterval:(CMTime)time {
+    int mseconds =  CMTimeGetSeconds(time)*1000;
+    [_channel invokeMethod:@"audio.onCurrentPosition" arguments:@(mseconds)];
+}
+
 - (void)onStart {
     CMTime duration = [[self.musicPlayer.avQueuePlayer currentItem] duration];
     if (CMTimeGetSeconds(duration) > 0) {
         int mseconds= CMTimeGetSeconds(duration)*1000;
         [_channel invokeMethod:@"audio.onStart" arguments:@(mseconds)];
     }
-}
-
-- (void)onTimeInterval:(CMTime)time {
-    int mseconds =  CMTimeGetSeconds(time)*1000;
-    [_channel invokeMethod:@"audio.onCurrentPosition" arguments:@(mseconds)];
 }
 
 - (void)play {
@@ -208,7 +209,6 @@ FlutterMethodChannel *_channel;
     if (!self.musicPlayer.avQueuePlayer) return;
     if (object == self.musicPlayer.avQueuePlayer.currentItem && [@"status" isEqualToString:keyPath]) {
         if ([[self.musicPlayer.avQueuePlayer currentItem] status] == AVPlayerItemStatusReadyToPlay) {
-            [self.musicPlayer setMediaItem:@{@"title": @"Test title new", @"artist": @"Chuongvd"}];
             [self onStart];
         } else if ([[self.musicPlayer.avQueuePlayer currentItem] status] == AVPlayerItemStatusFailed) {
             [_channel invokeMethod:@"audio.onError" arguments:@[(self.musicPlayer.avQueuePlayer.currentItem.error.localizedDescription)]];
@@ -254,6 +254,12 @@ FlutterMethodChannel *_channel;
         }
     }
 }
+
+- (void)changeItem:(NSNotification *) notification {
+    NSDictionary *data = notification.userInfo;
+    [self.musicPlayer setMediaItem:data];
+}
+
 
 - (void)dealloc {
     [[NSNotificationCenter defaultCenter] removeObserver:self];
