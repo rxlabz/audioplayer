@@ -145,7 +145,6 @@ FlutterMethodChannel *_channel;
     }
     [self onStart];
     [self.musicPlayer playSongWithItem:playerItem];
-    //    [player play];
     isPlaying = true;
 }
 
@@ -166,6 +165,8 @@ FlutterMethodChannel *_channel;
     [self.musicPlayer play];
     isPlaying = true;
     [_channel invokeMethod:@"audio.onPlay" arguments:nil];
+    [[NSNotificationCenter defaultCenter] postNotificationName:MEDIA_ACTION_CHANGE_STATE object:nil userInfo:@{@"data": @[@3, @547, [self getCurrentPosition], @1.0, [self getCurrentTimeInMilis]]}];
+    [self.musicPlayer setCommandState:3];
 }
 
 - (void)pause {
@@ -180,6 +181,7 @@ FlutterMethodChannel *_channel;
     [self.musicPlayer clear];
     [AudioPlayerNotification endSession];
     [[NSNotificationCenter defaultCenter] postNotificationName:MEDIA_ACTION_CHANGE_STATE object:nil userInfo:@{@"data": @[@1, @547, @0, @1.0, [self getCurrentTimeInMilis]]}];
+    [self.musicPlayer setCommandState:1];
     [_channel invokeMethod:@"audio.onStop" arguments:nil];
 }
 
@@ -216,12 +218,14 @@ FlutterMethodChannel *_channel;
     }
 
     if (object == self.musicPlayer.avQueuePlayer.currentItem && [@"playbackBufferEmpty" isEqualToString:keyPath]) {
-        [[NSNotificationCenter defaultCenter] postNotificationName:MEDIA_ACTION_CHANGE_STATE object:nil userInfo:@{@"data": @[@6, @547, [self getCurrentPosition], @1.0, [self getCurrentTimeInMilis]]}];
         NSLog(@"buffering...");
+        [[NSNotificationCenter defaultCenter] postNotificationName:MEDIA_ACTION_CHANGE_STATE object:nil userInfo:@{@"data": @[@8, @547, [self getCurrentPosition], @1.0, [self getCurrentTimeInMilis]]}];
+        [self.musicPlayer setCommandState:8];
     }
 
     if (object == self.musicPlayer.avQueuePlayer.currentItem && [@"playbackLikelyToKeepUp" isEqualToString:keyPath]) {
         NSLog(@"buffering ends...");
+        [self play];
     }
 
     if (object == self.musicPlayer.avQueuePlayer.currentItem && [@"playbackBufferFull" isEqualToString:keyPath]) {
@@ -235,12 +239,14 @@ FlutterMethodChannel *_channel;
                 {
                 NSLog(@"Playing...");
                 [[NSNotificationCenter defaultCenter] postNotificationName:MEDIA_ACTION_CHANGE_STATE object:nil userInfo:@{@"data": @[@3, @547, [self getCurrentPosition], @1.0, [self getCurrentTimeInMilis]]}];
+                [self.musicPlayer setCommandState:3];
                 break;
                 }
                 case AVPlayerTimeControlStatusPaused:
                 {
                 NSLog(@"Paused");
                 [[NSNotificationCenter defaultCenter] postNotificationName:MEDIA_ACTION_CHANGE_STATE object:nil userInfo:@{@"data": @[@2, @547, [self getCurrentPosition], @1.0, [self getCurrentTimeInMilis]]}];
+                [self.musicPlayer setCommandState:2];
                 break;
                 }
                 case AVPlayerTimeControlStatusWaitingToPlayAtSpecifiedRate:

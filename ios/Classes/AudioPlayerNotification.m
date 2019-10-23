@@ -130,7 +130,7 @@
         [MPNowPlayingInfoCenter defaultCenter].nowPlayingInfo = songInfo;
         
         // Set command center
-         [self setCommandState:3];
+        [self setCommandState:3];
         MPRemoteCommandCenter *commandCenter = [MPRemoteCommandCenter sharedCommandCenter];
         [[commandCenter pauseCommand] addTargetWithHandler:^MPRemoteCommandHandlerStatus(MPRemoteCommandEvent * _Nonnull event) {
             [self pause];
@@ -214,6 +214,18 @@
         }
             break;
         case 3:
+        {
+        [[commandCenter previousTrackCommand] setEnabled:NO];
+        [[commandCenter nextTrackCommand] setEnabled:NO];
+        [[commandCenter togglePlayPauseCommand] setEnabled:NO];
+        [[commandCenter seekForwardCommand] setEnabled:NO];
+        [[commandCenter seekBackwardCommand] setEnabled:NO];
+        [[commandCenter playCommand] setEnabled:NO];
+        [[commandCenter pauseCommand] setEnabled:NO];
+        [[commandCenter stopCommand] setEnabled:YES];
+        }
+            break;
+        case 8:
         {
         [[commandCenter previousTrackCommand] setEnabled:NO];
         [[commandCenter nextTrackCommand] setEnabled:NO];
