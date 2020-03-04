@@ -364,7 +364,7 @@ public class AudioplayerPlugin extends MediaBrowserService implements MethodCall
         }*/
 
         if(isPlaying){
-          stop();
+          pause();
         }else{
           if(currentPlayingURRL!=null){
             play(currentPlayingURRL);
