@@ -12,16 +12,27 @@ A Flutter audio plugin (ObjC/Java) to play remote or local audio files
   - [x] onDuration / onCurrentPosition
   - [x] seek
   - [x] mute
-
-![screenshot](https://www.evernote.com/shard/s1/sh/c9e2e0dc-4e1b-4797-b23f-2bdf0f6f3387/d1138680d3b4bdcd/res/1afa2507-2df2-42ef-a840-d7f3519f5cb3/skitch.png?resizeSmall&width=320)
+- [x] Android ONLY
+    - [x] music session with controls (50% done)
+        - [x] music session creation
+        - [x] play, pause, stop, seek controls
+        - [ ] metadata broadcasting*
+        - [ ] next, previous, queue management*
+        - [ ] mediaBrowser for car/wear os library*
+    - [x] audioFocus management
+        - [x] requesting focus
+        - [x] focus loss management
+    
 
 ## Usage
 
-[Example](https://github.com/rxlabz/audioplayer/blob/master/example/lib/main.dart)
+[Example](https://github.com/moda20/audioplayer/blob/master/example/lib/main.dart)
+
+Also used in [TuneIn](https://github.com/moda20/flutter-tunein)
 
 To use this plugin :
 
-- Add the dependency to your [pubspec.yaml](https://github.com/rxlabz/audioplayer/blob/master/example/pubspec.yaml) file.
+- Add the dependency to your [pubspec.yaml](https://github.com/moda20/audioplayer/blob/master/example/pubspec.yaml) file.
 
 ```yaml
   dependencies:
@@ -107,7 +118,7 @@ By default iOS forbids loading from non-https url. To cancel this restriction ed
 ## Troubleshooting
 
 - If you get a MissingPluginException, try to `flutter build apk` on Android, or `flutter build ios`
-- to use the plugin in a ObjC iOS project, add 'use_frameworks!' to your podfile cf. [example](https://github.com/rxlabz/audioplayer/blob/master/example/ios/Podfile)
+- to use the plugin in a ObjC iOS project, add 'use_frameworks!' to your podfile cf. [example](https://github.com/moda20/blob/master/example/ios/Podfile)
 
 ## Getting Started
 
