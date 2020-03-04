@@ -18,6 +18,27 @@ enum AudioPlayerState {
   COMPLETED,
 }
 
+
+enum PlayBackKeys {
+
+  PAUSE_KEY,
+
+  PLAY_KEY,
+
+  NEXT_KEY,
+
+  PREV_KEY,
+
+  REWIND_KEY,
+
+  STOP_KEY,
+
+  SEEK_KEY,
+
+  FAST_FORWARD_KEY,
+}
+
+
 const MethodChannel _channel =
     const MethodChannel('bz.rxla.flutter/audio');
 
@@ -111,6 +132,71 @@ class AudioPlayer {
         // TODO: Handle error arguments here. It is not useful to pass this
         // to the client since each platform creates different error string
         // formats so we can't expect client to parse these.
+        break;
+      case "audio.onKeyPause":
+//        print('audio.onCurrentPosition: ${call.arguments}');
+        _playerPlaybackKeys.add(PlayBackKeys.PAUSE_KEY);
+        break;
+      case "audio.onPlayPauseKey":
+//        print('audio.onCurrentPosition: ${call.arguments}');
+        if(call.arguments==true){
+          _playerPlaybackKeys.add(PlayBackKeys.PLAY_KEY);
+        }else{
+          _playerPlaybackKeys.add(PlayBackKeys.PAUSE_KEY);
+        }
+
+        break;
+      case "audio.onKeySkipToNext":
+        _playerPlaybackKeys.add(PlayBackKeys.NEXT_KEY);
+        break;
+      case "audio.onKeySkipToPrevious":
+        _playerPlaybackKeys.add(PlayBackKeys.PREV_KEY);
+        break;
+      case "audio.onKeyFastForward":
+        _playerPlaybackKeys.add(PlayBackKeys.FAST_FORWARD_KEY);
+        break;
+      case "audio.onKeyRewind":
+        _playerPlaybackKeys.add(PlayBackKeys.REWIND_KEY);
+        break;
+      case "audio.onKeySeekTo":
+        _playerPlaybackKeys.add(PlayBackKeys.SEEK_KEY);
+        break;
+      case "audio.onKeyStop":
+        _playerPlaybackKeys.add(PlayBackKeys.STOP_KEY);
+        break;
+      default:
+        throw new ArgumentError('Unknown method ${call.method} ');
+    }
+  }
+
+  ///Stream for subscribing to the playback keys callbacks
+  ///
+  /// DEPRECATED, CAN4T USE MULTIPLE HANDLERS FOR CALLBACKS
+
+  Future<void> _audioKeysEvents(MethodCall call) async {
+//    print('callback method: ${call.method}');
+    switch (call.method) {
+      case "audio.onKeyPause":
+//        print('audio.onCurrentPosition: ${call.arguments}');
+        _playerPlaybackKeys.add(PlayBackKeys.PAUSE_KEY);
+        break;
+      case "audio.onKeySkipToNext":
+        _playerPlaybackKeys.add(PlayBackKeys.NEXT_KEY);
+        break;
+      case "audio.onKeySkipToPrevious":
+        _playerPlaybackKeys.add(PlayBackKeys.PREV_KEY);
+        break;
+      case "audio.onKeyFastForward":
+        _playerPlaybackKeys.add(PlayBackKeys.FAST_FORWARD_KEY);
+        break;
+      case "audio.onKeyRewind":
+        _playerPlaybackKeys.add(PlayBackKeys.REWIND_KEY);
+        break;
+      case "audio.onKeySeekTo":
+        _playerPlaybackKeys.add(PlayBackKeys.SEEK_KEY);
+        break;
+      case "audio.onKeyStop":
+        _playerPlaybackKeys.add(PlayBackKeys.STOP_KEY);
         break;
       default:
         throw new ArgumentError('Unknown method ${call.method} ');

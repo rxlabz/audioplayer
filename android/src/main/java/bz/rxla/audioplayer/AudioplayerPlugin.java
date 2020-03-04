@@ -366,11 +366,14 @@ public class AudioplayerPlugin extends MediaBrowserService implements MethodCall
 
         if(isPlaying){
           pause();
+          channel.invokeMethod("audio.onPlayPauseKey", false);
         }else{
           if(currentPlayingURRL!=null){
             play(currentPlayingURRL);
+            channel.invokeMethod("audio.onPlayPauseKey", true);
           }
         }
+
       }
 
       @Override
