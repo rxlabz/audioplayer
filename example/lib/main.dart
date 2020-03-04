@@ -84,7 +84,7 @@ class _AudioAppState extends State<AudioApp> {
   }
 
   Future play() async {
-    await audioPlayer.play(kUrl);
+    await audioPlayer.play("https://5a6872aace0ce.streamlock.net/nghevov3/vov3.stream_aac/chunklist_w981158175.m3u8");
     setState(() {
       playerState = PlayerState.playing;
     });
@@ -198,14 +198,14 @@ class _AudioAppState extends State<AudioApp> {
               icon: new Icon(Icons.stop),
               color: Colors.cyan),
         ]),
-        duration == null
+        /*duration == null
             ? new Container()
             : new Slider(
                 value: position?.inMilliseconds?.toDouble() ?? 0.0,
                 onChanged: (double value) =>
                     audioPlayer.seek((value / 1000).roundToDouble()),
                 min: 0.0,
-                max: duration.inMilliseconds.toDouble()),
+                max: (duration.inMilliseconds+0.1).toDouble()),*/
         new Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: <Widget>[

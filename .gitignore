@@ -8,6 +8,8 @@ build/
 ios/.generated/
 packages
 pubspec.lock
+example/android/**
+**/android/.project
 
 Podfile
 Podfile.lock
