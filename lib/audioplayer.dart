@@ -31,6 +31,8 @@ const MethodChannel _channel =
 class AudioPlayer {
   final StreamController<AudioPlayerState> _playerStateController =
       new StreamController.broadcast();
+  final StreamController<PlayBackKeys> _playerPlaybackKeys =
+      new StreamController.broadcast();
 
   final StreamController<Duration> _positionController =
       new StreamController.broadcast();
@@ -60,6 +62,8 @@ class AudioPlayer {
 
   /// Stream for subscribing to player state change events.
   Stream<AudioPlayerState> get onPlayerStateChanged => _playerStateController.stream;
+
+  Stream<PlayBackKeys> get onPlaybackKeyEvent => _playerPlaybackKeys.stream;
 
   /// Reports what the player is currently doing.
   AudioPlayerState get state => _state;

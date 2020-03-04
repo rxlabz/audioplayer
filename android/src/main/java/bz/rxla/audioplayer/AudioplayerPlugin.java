@@ -192,20 +192,19 @@ public class AudioplayerPlugin extends MediaBrowserService implements MethodCall
       mediaPlayer.stop();
       mediaPlayer.release();
       mediaPlayer = null;
-      abandonAudioFocus();
       channel.invokeMethod("audio.onStop", null);
       isPlaying=false;
+      abandonAudioFocus();
     }
   }
 
   private void pause() {
-    Log.d(TAG, "pause: Pausing the music");
     handler.removeCallbacks(sendData);
     if (mediaPlayer != null) {
       mediaPlayer.pause();
       channel.invokeMethod("audio.onPause", true);
-      abandonAudioFocus();
       isPlaying=false;
+      abandonAudioFocus();
     }
   }
 
@@ -377,38 +376,45 @@ public class AudioplayerPlugin extends MediaBrowserService implements MethodCall
       @Override
       public void onPause() {
         Log.d(TAG, "pause");
+          channel.invokeMethod("audio.onKeyPause", true);
         pause();
       }
 
       @Override
       public void onSkipToNext() {
         //Will be implemented as an event to the plugin side
+          channel.invokeMethod("audio.onKeySkipToNext", true);
       }
 
       @Override
       public void onSkipToPrevious() {
         //Will be implemented as an event to the plugin side
+          channel.invokeMethod("audio.onKeySkipToPrevious", true);
       }
 
       @Override
       public void onFastForward() {
         //Will be implemented as an event to the plugin side
+          channel.invokeMethod("audio.onKeyFastForward", true);
       }
 
       @Override
       public void onRewind() {
         //Will be implemented as an event to the plugin side
+          channel.invokeMethod("audio.onKeyRewind", true);
       }
 
       @Override
       public void onStop() {
         Log.d(TAG, "Stop");
+          channel.invokeMethod("audio.onKeyStop", true);
         stop();
       }
 
       @Override
       public void onSeekTo(long pos) {
         Log.d(TAG, "Seek");
+          channel.invokeMethod("audio.onKeySeekTo", pos);
         seek((double)pos);
       }
     });
