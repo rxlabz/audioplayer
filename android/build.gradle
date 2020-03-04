@@ -4,30 +4,37 @@ version '1.0-SNAPSHOT'
 buildscript {
     repositories {
         jcenter()
+        google()
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:2.3.0'
+        classpath 'com.android.tools.build:gradle:3.2.1'
     }
 }
 
 allprojects {
     repositories {
         jcenter()
+        google()
     }
 }
 
 apply plugin: 'com.android.library'
 
 android {
-    compileSdkVersion 25
-
+    compileSdkVersion 28
+    buildToolsVersion "28.0.3"
   defaultConfig {
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
-      minSdkVersion 16
-    targetSdkVersion 21
+      minSdkVersion 21
   }
     lintOptions {
         disable 'InvalidPackage'
     }
 }
+
+dependencies {
+    implementation 'androidx.core:core:1.1.0'
+    implementation 'androidx.media:media:1.1.0'
+}
+

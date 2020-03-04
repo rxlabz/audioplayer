@@ -2,5 +2,12 @@
   package="bz.rxla.audioplayer"
   android:versionCode="1"
   android:versionName="0.1.0">
-
+    <application>
+        <service android:name=".AudioplayerPlugin"
+            android:label="MediaService" >
+            <intent-filter>
+                <action android:name="android.media.browse.MediaBrowserService" />
+            </intent-filter>
+        </service>
+    </application>
 </manifest>
