@@ -192,6 +192,7 @@ public class AudioplayerPlugin extends MediaBrowserService implements MethodCall
       mediaPlayer.stop();
       mediaPlayer.release();
       mediaPlayer = null;
+      abandonAudioFocus();
       channel.invokeMethod("audio.onStop", null);
       isPlaying=false;
     }
