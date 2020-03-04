@@ -125,7 +125,7 @@ public class AudioplayerPlugin extends MediaBrowserService implements MethodCall
         }
       }
     };
-    setupBroadcastReceiver();
+    //setupBroadcastReceiver();
     startSession(mContext);
   }
 
@@ -210,8 +210,12 @@ public class AudioplayerPlugin extends MediaBrowserService implements MethodCall
 
   private void play(String url) {
     currentPlayingURRL =url;
-    int result = requestAudioFocus();
-    Log.d("AUDIOPLAYERPLUGIN", "AudioplayerPlugin: RESULT OF FOCUS REQUESTING : "+ result);
+    int result;
+    if(!isPlaying){
+      result = requestAudioFocus();
+    }else{
+      result=1;
+    }
     if(result ==AudioManager.AUDIOFOCUS_REQUEST_GRANTED){
       if (mediaPlayer == null) {
         mediaPlayer = new MediaPlayer();
@@ -319,17 +323,14 @@ public class AudioplayerPlugin extends MediaBrowserService implements MethodCall
       public void onReceive(Context context, Intent intent) {
         String action = intent.getAction();
         String cmd = intent.getStringExtra(CMD_NAME);
-        Log.i(TAG, "mIntentReceiver.onReceive " + action + " / " + cmd);
         if (PAUSE_SERVICE_CMD.equals(action)
                 || (SERVICE_CMD.equals(action) && CMD_PAUSE.equals(cmd))) {
           if(currentPlayingURRL!=null){
-            Log.d(TAG, "onReceive: RECIEVED A BROADCAST OF PAUSE");
             play(currentPlayingURRL);
           }
         }
         if (PLAY_SERVICE_CMD.equals(action)
                 || (SERVICE_CMD.equals(action) && CMD_PLAY.equals(cmd))) {
-          Log.d(TAG, "onReceive: RECIEVED A BROADCAST OF PLAY");
           pause();
         }
       }
@@ -429,7 +430,6 @@ public class AudioplayerPlugin extends MediaBrowserService implements MethodCall
   }
   @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
   private void updatePlaybackState(String error) {
-    Log.d(TAG, "updatePlaybackState, setting session playback state to " + mState);
     long position = PlaybackState.PLAYBACK_POSITION_UNKNOWN;
     if (mediaPlayer != null && mediaPlayer.isPlaying()) {
       position = mediaPlayer.getCurrentPosition();
