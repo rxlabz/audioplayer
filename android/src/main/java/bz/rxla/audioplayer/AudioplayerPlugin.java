@@ -125,7 +125,7 @@ public class AudioplayerPlugin extends MediaBrowserService implements MethodCall
         }
       }
     };
-    //setupBroadcastReceiver();
+    setupBroadcastReceiver();
     startSession(mContext);
   }
 
@@ -136,6 +136,7 @@ public class AudioplayerPlugin extends MediaBrowserService implements MethodCall
   public void onDestroy() {
     mSession.release();
     handleStopRequest(null);
+    unSetupBroadcastReceiver();
     super.onDestroy();
   }
 
@@ -333,6 +334,10 @@ public class AudioplayerPlugin extends MediaBrowserService implements MethodCall
                 || (SERVICE_CMD.equals(action) && CMD_PLAY.equals(cmd))) {
           pause();
         }
+          if (AudioManager.ACTION_AUDIO_BECOMING_NOISY.equals(action)) {
+              //headphones unplugged
+              pause();
+          }
       }
     };
 // Do the right thing when something else tries to play
@@ -341,9 +346,16 @@ public class AudioplayerPlugin extends MediaBrowserService implements MethodCall
       commandFilter.addAction(SERVICE_CMD);
       commandFilter.addAction(PAUSE_SERVICE_CMD);
       commandFilter.addAction(PLAY_SERVICE_CMD);
+      commandFilter.addAction(AudioManager.ACTION_AUDIO_BECOMING_NOISY);
       mContext.registerReceiver(mIntentReceiver, commandFilter);
       mReceiverRegistered = true;
     }
+  }
+
+  private void unSetupBroadcastReceiver(){
+      if(mReceiverRegistered){
+          mContext.unregisterReceiver(mIntentReceiver);
+      }
   }
 
   @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
@@ -351,6 +363,7 @@ public class AudioplayerPlugin extends MediaBrowserService implements MethodCall
     mSession = new MediaSession(context, "MusicService");
     setSessionToken(mSession.getSessionToken());
     mSession.setCallback(new MediaSession.Callback() {
+
       @Override
       public void onPlay() {
         Log.d(TAG, "play");
