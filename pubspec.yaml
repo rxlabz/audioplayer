@@ -4,14 +4,21 @@ version: 0.5.2
 author: Erick Ghaumez <erick@rxla.bz>
 homepage: https://github.com/rxlabz/audioplayer
 
-flutter:
-  plugin:
-    androidPackage: bz.rxla.audioplayer
-    pluginClass: AudioplayerPlugin
+environment:
+  sdk: ">=2.7.0 <3.0.0"
+  flutter: ">=1.10.0"
 
 dependencies:
   flutter:
     sdk: flutter
 
-environment:
-    sdk: ">=1.19.0 <3.0.0"
+flutter:
+  plugin:
+    platforms:
+      android:
+        package: bz.rxla.audioplayer
+        pluginClass: AudioplayerPlugin
+      ios:
+        pluginClass: AudioplayerPlugin
+      macos:
+        pluginClass: AudioplayerPlugin
