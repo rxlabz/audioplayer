@@ -1,0 +1,1 @@
+../../ios/Classes/SwiftAudioplayerPlugin.swift
