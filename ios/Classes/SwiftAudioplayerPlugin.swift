@@ -9,10 +9,10 @@ public class SwiftAudioplayerPlugin: NSObject, FlutterPlugin {
     var position: CMTime = CMTimeMake(value: 0, timescale: 1)
     var lastUrl: String! = ""
     var isPlaying: Bool = false
-    var observers: NSMutableSet!
-    var timeobservers: NSMutableSet!
+    var observers: [Any] = []
+    var timeobservers: [Any] = []
     var _channel: FlutterMethodChannel
-    var player: AVPlayer?
+    @objc var player: AVPlayer?
     var playerItem: AVPlayerItem?
 
     public static func register(with registrar: FlutterPluginRegistrar) {
@@ -62,13 +62,13 @@ public class SwiftAudioplayerPlugin: NSObject, FlutterPlugin {
     }
 
     func play(url: String!, isLocal: Bool) {
-        if !(url == lastUrl) {
-            playerItem?.removeObserver(self, forKeyPath: "player.currentItem.status")
+        if url != lastUrl {
+            playerItem?.removeObserver(self, forKeyPath: #keyPath(player.currentItem.status))
 
             for ob in observers {
                 NotificationCenter.default.removeObserver(ob)
             }
-            observers = nil
+            observers.removeAll()
 
             playerItem = AVPlayerItem(url: isLocal ? URL(fileURLWithPath: url) : URL(string: url)!)
             lastUrl = url
@@ -78,10 +78,10 @@ public class SwiftAudioplayerPlugin: NSObject, FlutterPlugin {
                 object: playerItem,
                 queue: nil, using: onSoundComplete
             )
-            timeobservers.add(anObserver)
+            observers.append(anObserver)
 
-            if let p = player {
-                p.replaceCurrentItem(with: playerItem)
+            if player != nil {
+                player!.replaceCurrentItem(with: playerItem)
             } else {
                 player = AVPlayer(playerItem: playerItem)
                 // Stream player position.
@@ -89,12 +89,12 @@ public class SwiftAudioplayerPlugin: NSObject, FlutterPlugin {
                 // remove it when player is paused or stopped.
                 let interval = CMTime(seconds: 0.2, preferredTimescale: CMTimeScale(NSEC_PER_SEC))
                 let timeObserver = player!.addPeriodicTimeObserver(forInterval: interval, queue: nil, using: onTimeInterval)
-                timeobservers.add(timeObserver)
+                timeobservers.append(timeObserver)
             }
 
             // is sound ready
             player!.currentItem?.addObserver(self,
-                                             forKeyPath: "player.currentItem.status",
+                                             forKeyPath: #keyPath(player.currentItem.status),
                                              context: nil)
         }
         onStart()
@@ -121,7 +121,7 @@ public class SwiftAudioplayerPlugin: NSObject, FlutterPlugin {
     }
 
     func pause() {
-        player!.pause()
+        player?.pause()
         isPlaying = false
         _channel.invokeMethod("audio.onPause", arguments: nil)
     }
@@ -131,23 +131,23 @@ public class SwiftAudioplayerPlugin: NSObject, FlutterPlugin {
             player!.pause()
             isPlaying = false
         }
-        playerItem!.seek(to: CMTimeMake(value: 0, timescale: 1))
+        playerItem?.seek(to: CMTimeMake(value: 0, timescale: 1))
         _channel.invokeMethod("audio.onStop", arguments: nil)
     }
 
     func mute(muted: Bool) {
-        player!.isMuted = muted
+        player?.isMuted = muted
     }
 
     func seek(time: CMTime) {
-        playerItem!.seek(to: time)
+        playerItem?.seek(to: time)
     }
 
     open override func observeValue(
         forKeyPath keyPath: String?, of object: Any?,
         change: [NSKeyValueChangeKey: Any]?, context: UnsafeMutableRawPointer?
     ) {
-        if keyPath == "player.currentItem.status" {
+        if keyPath == #keyPath(player.currentItem.status) {
             if player!.currentItem!.status == AVPlayerItem.Status.readyToPlay {
                 onStart()
             } else if player!.currentItem!.status == AVPlayerItem.Status.failed {
@@ -160,14 +160,12 @@ public class SwiftAudioplayerPlugin: NSObject, FlutterPlugin {
     }
 
     deinit {
-        if let p = player {
-            p.removeTimeObserver(onTimeInterval)
-            p.currentItem?.removeObserver(self, forKeyPath: "player.currentItem.status")
-            NotificationCenter.default.removeObserver(onSoundComplete)
+        for ob in timeobservers {
+            player?.removeTimeObserver(ob)
         }
         for ob in observers {
             NotificationCenter.default.removeObserver(ob)
         }
-        observers = nil
+        observers.removeAll()
     }
 }
