@@ -19,7 +19,6 @@ public class SwiftAudioplayerPlugin: NSObject, FlutterPlugin {
         let channel = FlutterMethodChannel(name: CHANNEL_NAME, binaryMessenger: registrar.messenger())
         let instance = SwiftAudioplayerPlugin(channel: channel)
         registrar.addMethodCallDelegate(instance, channel: channel)
-        // _channel = channel
     }
 
     init(channel: FlutterMethodChannel) {
