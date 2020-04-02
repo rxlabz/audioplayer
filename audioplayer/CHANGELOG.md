@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.7.0
+- add Web support
+
 ## 0.6.0
 - switch to Swift thanks @matteti #114
 - add MacOS support thanks @matteti #115

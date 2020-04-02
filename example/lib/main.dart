@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:audioplayer/audioplayer.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart';
 import 'package:path_provider/path_provider.dart';
@@ -13,14 +14,14 @@ const kUrl = "http://ccrma.stanford.edu/~jos/mp3/bachfugue.mp3";
 const kUrl2 = "http://ccrma.stanford.edu/~jos/mp3/pno-cs.mp3";
 
 void main() {
-  runApp(new MaterialApp(home: new Scaffold(body: new AudioApp())));
+  runApp(MaterialApp(home: Scaffold(body: AudioApp())));
 }
 
 enum PlayerState { stopped, playing, paused }
 
 class AudioApp extends StatefulWidget {
   @override
-  _AudioAppState createState() => new _AudioAppState();
+  _AudioAppState createState() => _AudioAppState();
 }
 
 class _AudioAppState extends State<AudioApp> {
@@ -38,6 +39,7 @@ class _AudioAppState extends State<AudioApp> {
 
   get durationText =>
       duration != null ? duration.toString().split('.').first : '';
+
   get positionText =>
       position != null ? position.toString().split('.').first : '';
 
@@ -61,7 +63,7 @@ class _AudioAppState extends State<AudioApp> {
   }
 
   void initAudioPlayer() {
-    audioPlayer = new AudioPlayer();
+    audioPlayer = AudioPlayer();
     _positionSubscription = audioPlayer.onAudioPositionChanged
         .listen((p) => setState(() => position = p));
     _audioPlayerStateSubscription =
@@ -77,8 +79,8 @@ class _AudioAppState extends State<AudioApp> {
     }, onError: (msg) {
       setState(() {
         playerState = PlayerState.stopped;
-        duration = new Duration(seconds: 0);
-        position = new Duration(seconds: 0);
+        duration = Duration(seconds: 0);
+        position = Duration(seconds: 0);
       });
     });
   }
@@ -104,7 +106,7 @@ class _AudioAppState extends State<AudioApp> {
     await audioPlayer.stop();
     setState(() {
       playerState = PlayerState.stopped;
-      position = new Duration();
+      position = Duration();
     });
   }
 
@@ -135,7 +137,7 @@ class _AudioAppState extends State<AudioApp> {
             print('_loadFile => exception $exception'));
 
     final dir = await getApplicationDocumentsDirectory();
-    final file = new File('${dir.path}/audio.mp3');
+    final file = File('${dir.path}/audio.mp3');
 
     await file.writeAsBytes(bytes);
     if (await file.exists())
@@ -146,100 +148,126 @@ class _AudioAppState extends State<AudioApp> {
 
   @override
   Widget build(BuildContext context) {
-    return new Center(
-        child: new Material(
-            elevation: 2.0,
-            color: Colors.grey[200],
-            child: new Center(
-              child: new Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    new Material(child: _buildPlayer()),
-                    localFilePath != null
-                        ? new Text(localFilePath)
-                        : new Container(),
-                    new Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: new Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            new RaisedButton(
-                              onPressed: () => _loadFile(),
-                              child: new Text('Download'),
-                            ),
-                            new RaisedButton(
-                              onPressed: () => _playLocal(),
-                              child: new Text('play local'),
-                            ),
-                          ]),
-                    )
-                  ]),
-            )));
-  }
-
-  Widget _buildPlayer() => new Container(
-      padding: new EdgeInsets.all(16.0),
-      child: new Column(mainAxisSize: MainAxisSize.min, children: [
-        new Row(mainAxisSize: MainAxisSize.min, children: [
-          new IconButton(
-              onPressed: isPlaying ? null : () => play(),
-              iconSize: 64.0,
-              icon: new Icon(Icons.play_arrow),
-              color: Colors.cyan),
-          new IconButton(
-              onPressed: isPlaying ? () => pause() : null,
-              iconSize: 64.0,
-              icon: new Icon(Icons.pause),
-              color: Colors.cyan),
-          new IconButton(
-              onPressed: isPlaying || isPaused ? () => stop() : null,
-              iconSize: 64.0,
-              icon: new Icon(Icons.stop),
-              color: Colors.cyan),
-        ]),
-        duration == null
-            ? new Container()
-            : new Slider(
-                value: position?.inMilliseconds?.toDouble() ?? 0.0,
-                onChanged: (double value) =>
-                    audioPlayer.seek((value / 1000).roundToDouble()),
-                min: 0.0,
-                max: duration.inMilliseconds.toDouble()),
-        new Row(
+    final textTheme = Theme.of(context).textTheme;
+    return Center(
+      child: Center(
+        child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: <Widget>[
-            new IconButton(
-                onPressed: () => mute(true),
-                icon: new Icon(Icons.headset_off),
-                color: Colors.cyan),
-            new IconButton(
-                onPressed: () => mute(false),
-                icon: new Icon(Icons.headset),
-                color: Colors.cyan),
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Flutter Audioplayer',
+              style: textTheme.headline6,
+            ),
+            Material(child: _buildPlayer()),
+            if (!kIsWeb)
+              localFilePath != null ? Text(localFilePath) : Container(),
+            if (!kIsWeb)
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    RaisedButton(
+                      onPressed: () => _loadFile(),
+                      child: Text('Download'),
+                    ),
+                    RaisedButton(
+                      onPressed: () => _playLocal(),
+                      child: Text('play local'),
+                    ),
+                  ],
+                ),
+              ),
           ],
         ),
-        new Row(mainAxisSize: MainAxisSize.min, children: [
-          new Padding(
-              padding: new EdgeInsets.all(12.0),
-              child: new Stack(children: [
-                new CircularProgressIndicator(
-                    value: 1.0,
-                    valueColor: new AlwaysStoppedAnimation(Colors.grey[300])),
-                new CircularProgressIndicator(
-                  value: position != null && position.inMilliseconds > 0
-                      ? (position?.inMilliseconds?.toDouble() ?? 0.0) /
-                          (duration?.inMilliseconds?.toDouble() ?? 0.0)
-                      : 0.0,
-                  valueColor: new AlwaysStoppedAnimation(Colors.cyan),
-                  backgroundColor: Colors.yellow,
+      ),
+    );
+  }
+
+  Widget _buildPlayer() => Container(
+        padding: EdgeInsets.all(16.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(mainAxisSize: MainAxisSize.min, children: [
+              IconButton(
+                onPressed: isPlaying ? null : () => play(),
+                iconSize: 64.0,
+                icon: Icon(Icons.play_arrow),
+                color: Colors.cyan,
+              ),
+              if (position != null)
+                IconButton(
+                  onPressed: isPlaying ? () => pause() : null,
+                  iconSize: 64.0,
+                  icon: Icon(Icons.pause),
+                  color: Colors.cyan,
                 ),
-              ])),
-          new Text(
-              position != null
-                  ? "${positionText ?? ''} / ${durationText ?? ''}"
-                  : duration != null ? durationText : '',
-              style: new TextStyle(fontSize: 24.0))
-        ])
-      ]));
+              if (position != null)
+                IconButton(
+                  onPressed: isPlaying || isPaused ? () => stop() : null,
+                  iconSize: 64.0,
+                  icon: Icon(Icons.stop),
+                  color: Colors.cyan,
+                ),
+            ]),
+            duration == null
+                ? Container()
+                : Slider(
+                    value: position?.inMilliseconds?.toDouble() ?? 0.0,
+                    onChanged: (double value) =>
+                        audioPlayer.seek((value / 1000).roundToDouble()),
+                    min: 0.0,
+                    max: duration.inMilliseconds.toDouble()),
+            if (position != null) _buildMuteButtons(),
+            if (position != null) _buildProgressView()
+          ],
+        ),
+      );
+
+  Row _buildProgressView() {
+    return Row(mainAxisSize: MainAxisSize.min, children: [
+      Padding(
+        padding: EdgeInsets.all(12.0),
+        child: CircularProgressIndicator(
+          value: position != null && position.inMilliseconds > 0
+              ? (position?.inMilliseconds?.toDouble() ?? 0.0) /
+                  (duration?.inMilliseconds?.toDouble() ?? 0.0)
+              : 0.0,
+          valueColor: AlwaysStoppedAnimation(Colors.cyan),
+          backgroundColor: Colors.grey.shade400,
+        ),
+      ),
+      Text(
+        position != null
+            ? "${positionText ?? ''} / ${durationText ?? ''}"
+            : duration != null ? durationText : '',
+        style: TextStyle(fontSize: 24.0),
+      )
+    ]);
+  }
+
+  Row _buildMuteButtons() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: <Widget>[
+        if (!isMuted)
+          FlatButton.icon(
+            onPressed: () => mute(true),
+            icon: Icon(
+              Icons.headset_off,
+              color: Colors.cyan,
+            ),
+            label: Text('Mute', style: TextStyle(color: Colors.cyan)),
+          ),
+        if (isMuted)
+          FlatButton.icon(
+            onPressed: () => mute(false),
+            icon: Icon(Icons.headset, color: Colors.cyan),
+            label: Text('Unmute', style: TextStyle(color: Colors.cyan)),
+          ),
+      ],
+    );
+  }
 }

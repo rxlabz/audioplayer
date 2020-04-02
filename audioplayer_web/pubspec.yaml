@@ -1,0 +1,27 @@
+name: audioplayer_web
+description: Web platform implementation of audioplayer
+homepage: https://github.com/rxlabz/audioplayer
+version: 0.7.0
+
+flutter:
+  plugin:
+    platforms:
+      web:
+        pluginClass: AudioplayerPlugin
+        fileName: audioplayer_web.dart
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_web_plugins:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  audioplayer:
+    path: ../audioplayer
+
+environment:
+  sdk: ">=2.0.0 <3.0.0"
+  flutter: ">=1.10.0 <2.0.0"

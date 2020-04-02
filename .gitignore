@@ -1,18 +1,18 @@
-.DS_Store
+**/.DS_Store
 .atom/
 .idea
-.packages
-.pub/
-.dart_tool/
-build/
-ios/.generated/
-packages
-pubspec.lock
+**/.packages
+**/.pub/
+**/.dart_tool/
+**/build/
+**/ios/.generated/
+**/packages
+**/pubspec.lock
 
 Podfile
 Podfile.lock
-Pods/
-.symlinks/
+**/Pods/
+**/.symlinks/
 **/Flutter/App.framework/
 **/Flutter/Flutter.framework/
 **/Flutter/Generated.xcconfig
@@ -21,7 +21,7 @@ ServiceDefinitions.json
 xcuserdata/
 
 local.properties
-.gradle/
+**/.gradle/
 gradlew
 gradlew.bat
 gradle-wrapper.jar
@@ -30,6 +30,8 @@ gradle-wrapper.jar
 GeneratedPluginRegistrant.h
 GeneratedPluginRegistrant.m
 GeneratedPluginRegistrant.java
-build/
 example/.flutter-plugins-dependencies
 example/ios/Flutter/flutter_export_environment.sh
+
+.flutter-plugins
+.flutter-plugins-dependencies
