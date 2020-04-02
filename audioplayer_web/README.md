@@ -2,6 +2,8 @@
 
 [online example](https://rxlabz.github.io/audioplayer)
 
+![screenshot](https://rxlabz.github.io/audioplayer/audioplayer.png)
+
 ## Installation
 
 ```yaml
