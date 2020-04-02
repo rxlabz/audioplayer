@@ -1,6 +1,6 @@
-# audioplayer_example
+# audioplayer example
 
-a audio player plugin example
+[online example](https://rxlabz.github.io/audioplayer)
 
 ## Getting Started
 
