@@ -1,7 +1,7 @@
 name: audioplayer_web
 description: Flutter Web platform implementation of audioplayer plugin
 homepage: https://github.com/rxlabz/audioplayer
-version: 0.7.0
+version: 0.7.0+1
 
 flutter:
   plugin:
