@@ -1,6 +1,6 @@
 name: audioplayer_example
 description: a audio player plugin example
-version: 2.0.0
+version: 2.0.1
 
 environment:
   sdk: ">=2.0.0-dev.68.0 <3.0.0"
@@ -8,7 +8,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  cupertino_icons: ^0.1.2
+  cupertino_icons: ^0.1.3
   path_provider:
   http:
   audioplayer:

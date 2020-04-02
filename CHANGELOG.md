@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.6.0
+- switch to Swift thanks @matteti #114
+- add MacOS support thanks @matteti #115
+
 ## 0.5.2
 - fix objC warning
 - updated example
