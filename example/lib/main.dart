@@ -45,6 +45,7 @@ class _AudioAppState extends State<AudioApp> {
 
   StreamSubscription _positionSubscription;
   StreamSubscription _audioPlayerStateSubscription;
+  StreamSubscription _audioFocusSubscription;
 
   @override
   void initState() {
@@ -56,6 +57,7 @@ class _AudioAppState extends State<AudioApp> {
   void dispose() {
     _positionSubscription.cancel();
     _audioPlayerStateSubscription.cancel();
+    _audioFocusSubscription.cancel();
     audioPlayer.stop();
     super.dispose();
   }
@@ -64,6 +66,7 @@ class _AudioAppState extends State<AudioApp> {
     audioPlayer = new AudioPlayer();
     _positionSubscription = audioPlayer.onAudioPositionChanged
         .listen((p) => setState(() => position = p));
+
     _audioPlayerStateSubscription =
         audioPlayer.onPlayerStateChanged.listen((s) {
       if (s == AudioPlayerState.PLAYING) {
@@ -173,6 +176,16 @@ class _AudioAppState extends State<AudioApp> {
                               child: new Text('play local'),
                             ),
                           ]),
+                    ),
+                    StreamBuilder(
+                      stream: audioPlayer.onAudioFocusChange,
+                      builder: (context, snapshot){
+                        if(snapshot.hasData){
+                          return Text(snapshot.data.toString());
+                        }else{
+                          return Container();
+                        }
+                      },
                     )
                   ]),
             )));

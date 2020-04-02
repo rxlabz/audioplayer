@@ -14,9 +14,11 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.PowerManager;
+import android.os.ResultReceiver;
 import android.os.SystemClock;
 import android.service.media.MediaBrowserService;
 import android.support.v4.media.MediaBrowserCompat;
+import android.support.v4.media.session.MediaControllerCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.util.Log;
@@ -33,6 +35,8 @@ import java.util.List;
 
 import androidx.annotation.RequiresApi;
 import android.media.AudioFocusRequest;
+import android.view.KeyEvent;
+
 import androidx.media.MediaBrowserServiceCompat;
 
 /**
@@ -58,6 +62,8 @@ public class AudioplayerPlugin extends MediaBrowserService implements MethodCall
       PLAY_SERVICE_CMD = "com.android.music.musicservicecommand.play";
     }
   };
+  public static final int KEYCODE_BYPASS_PLAY = KeyEvent.KEYCODE_MUTE;
+  public static final int KEYCODE_BYPASS_PAUSE = KeyEvent.KEYCODE_MEDIA_RECORD;
   private Context mContext;
   private final MethodChannel channel;
   private final AudioManager am;
@@ -99,8 +105,14 @@ public class AudioplayerPlugin extends MediaBrowserService implements MethodCall
         switch (focusChange) {
           case AudioManager.AUDIOFOCUS_GAIN:
             Log.i(TAG, "AUDIOFOCUS_GAIN");
+            invokeFocusGained();
+            break;
+          case AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_EXCLUSIVE:
+            Log.i(TAG, "AUDIOFOCUS_GAIN_TRANSIENT_EXCLUSIVE");
+            invokeFocusGained();
             break;
           case AudioManager.AUDIOFOCUS_GAIN_TRANSIENT:
+            invokeFocusGained();
             Log.i(TAG, "AUDIOFOCUS_GAIN_TRANSIENT");
             break;
           case AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK:
@@ -108,10 +120,12 @@ public class AudioplayerPlugin extends MediaBrowserService implements MethodCall
             break;
           case AudioManager.AUDIOFOCUS_LOSS:
             Log.e(TAG, "AUDIOFOCUS_LOSS");
+            invokeFocusLost();
             pause();
             break;
           case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
             Log.e(TAG, "AUDIOFOCUS_LOSS_TRANSIENT");
+            invokeFocusLost();
             pause();
             break;
           case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK:
@@ -138,6 +152,15 @@ public class AudioplayerPlugin extends MediaBrowserService implements MethodCall
     handleStopRequest(null);
     unSetupBroadcastReceiver();
     super.onDestroy();
+  }
+
+
+  public void invokeFocusGained(){
+    channel.invokeMethod("audio.onAudioFocusGained",null);
+  }
+
+  public void invokeFocusLost(){
+    channel.invokeMethod("audio.onAudioFocusLost",null);
   }
 
   @Override
@@ -196,6 +219,8 @@ public class AudioplayerPlugin extends MediaBrowserService implements MethodCall
       channel.invokeMethod("audio.onStop", null);
       isPlaying=false;
       abandonAudioFocus();
+      mState=PlaybackState.STATE_STOPPED;
+      updatePlaybackState(null);
     }
   }
 
@@ -206,6 +231,8 @@ public class AudioplayerPlugin extends MediaBrowserService implements MethodCall
       channel.invokeMethod("audio.onPause", true);
       isPlaying=false;
       abandonAudioFocus();
+      mState=PlaybackState.STATE_PAUSED;
+      updatePlaybackState(null);
     }
   }
 
@@ -214,6 +241,9 @@ public class AudioplayerPlugin extends MediaBrowserService implements MethodCall
     int result;
     if(!isPlaying){
       result = requestAudioFocus();
+      //The focus gained channel invoke is used here since the listener doesn't trigger the audioFocus gained Listener
+      // It basically doesn't trigger the onAudioFocusChange method at all
+      invokeFocusGained();
     }else{
       result=1;
     }
@@ -265,6 +295,8 @@ public class AudioplayerPlugin extends MediaBrowserService implements MethodCall
       }
       isPlaying=true;
       handler.post(sendData);
+      mState=PlaybackState.STATE_PLAYING;
+      updatePlaybackState(null);
     }
   }
 
@@ -318,6 +350,8 @@ public class AudioplayerPlugin extends MediaBrowserService implements MethodCall
     }
   }
 
+  //The broadcast receiver is taking care only of the unplugged headphone event
+  //The other actions only count for old android versions support
   private void setupBroadcastReceiver() {
     mIntentReceiver = new BroadcastReceiver() {
       @Override
@@ -398,12 +432,60 @@ public class AudioplayerPlugin extends MediaBrowserService implements MethodCall
 
       @Override
       public void onSkipToNext() {
+        Log.d(TAG, "skipNext");
         //Will be implemented as an event to the plugin side
           channel.invokeMethod("audio.onKeySkipToNext", true);
       }
 
       @Override
+      public boolean onMediaButtonEvent(@NonNull Intent mediaButtonIntent) {
+        //THis will take care of the extra buttons and button combinations
+        final KeyEvent event = (KeyEvent)mediaButtonIntent.getExtras().get(Intent.EXTRA_KEY_EVENT);
+        if (event.getAction() == KeyEvent.ACTION_DOWN) {
+          switch (event.getKeyCode()) {
+            case KEYCODE_BYPASS_PLAY:
+              onPlay();
+              break;
+            case KEYCODE_BYPASS_PAUSE:
+              onPause();
+              break;
+            case KeyEvent.KEYCODE_MEDIA_NEXT:
+              onSkipToNext();
+              break;
+            case KeyEvent.KEYCODE_MEDIA_PREVIOUS:
+              onSkipToPrevious();
+              break;
+            case KeyEvent.KEYCODE_MEDIA_STOP:
+              onStop();
+              break;
+            case KeyEvent.KEYCODE_MEDIA_FAST_FORWARD:
+              onFastForward();
+              break;
+            case KeyEvent.KEYCODE_MEDIA_REWIND:
+              onRewind();
+              break;
+            // Android unfortunately reroutes media button clicks to
+            // KEYCODE_MEDIA_PLAY/PAUSE instead of the expected KEYCODE_HEADSETHOOK
+            // or KEYCODE_MEDIA_PLAY_PAUSE. As a result, we can't genuinely tell if
+            // onMediaButtonEvent was called because a media button was actually
+            // pressed or because a PLAY/PAUSE action was pressed instead! To get
+            // around this, we make PLAY and PAUSE actions use different keycodes:
+            // KEYCODE_BYPASS_PLAY/PAUSE. Now if we get KEYCODE_MEDIA_PLAY/PUASE
+            // we know it is actually a media button press.
+            case KeyEvent.KEYCODE_MEDIA_PLAY:
+            case KeyEvent.KEYCODE_MEDIA_PAUSE:
+              // These are the "genuine" media button click events
+            case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE:
+            case KeyEvent.KEYCODE_HEADSETHOOK:
+              break;
+          }
+        }
+        return true;
+      }
+
+      @Override
       public void onSkipToPrevious() {
+        Log.d(TAG, "skipPrevious");
         //Will be implemented as an event to the plugin side
           channel.invokeMethod("audio.onKeySkipToPrevious", true);
       }
@@ -433,12 +515,18 @@ public class AudioplayerPlugin extends MediaBrowserService implements MethodCall
           channel.invokeMethod("audio.onKeySeekTo", pos);
         seek((double)pos);
       }
+
+      @Override
+      public void onSkipToQueueItem(long id) {
+        Log.d(TAG, "onSkipToQueueItem: ");
+      }
     });
     mSession.setFlags(MediaSession.FLAG_HANDLES_MEDIA_BUTTONS |
             MediaSession.FLAG_HANDLES_TRANSPORT_CONTROLS);
     updatePlaybackState(null);
     /*mMediaNotification = new MediaNotification(this);*/
     mSession.setActive(true);
+    Log.d(TAG, "startSession: STARTING THE SESSION");
   }
 
   @Nullable
@@ -470,7 +558,6 @@ public class AudioplayerPlugin extends MediaBrowserService implements MethodCall
     }
     stateBuilder.setState(mState, position, 1.0f, SystemClock.elapsedRealtime());
     mSession.setPlaybackState(stateBuilder.build());
-
     //The notification part is not going to be implemented right now with this plugin
     /*if (mState == PlaybackState.STATE_PLAYING || mState == PlaybackState.STATE_PAUSED) {
       mMediaNotification.startNotification();
@@ -493,12 +580,17 @@ public class AudioplayerPlugin extends MediaBrowserService implements MethodCall
     if (mState == PlaybackState.STATE_PLAYING) {
       actions |= PlaybackState.ACTION_PAUSE;
     }
-    if (mCurrentIndexOnQueue > 0) {
+
+    //Since we don't manage queue from this plugin these will be discarded
+   /* if (mCurrentIndexOnQueue > 0) {
       actions |= PlaybackState.ACTION_SKIP_TO_PREVIOUS;
     }
     if (mCurrentIndexOnQueue < mPlayingQueue.size() - 1) {
       actions |= PlaybackState.ACTION_SKIP_TO_NEXT;
-    }
+    }*/
+    actions |= PlaybackState.ACTION_SKIP_TO_PREVIOUS;
+    actions |= PlaybackState.ACTION_SKIP_TO_NEXT;
+
     return actions;
   }
 
@@ -509,6 +601,7 @@ public class AudioplayerPlugin extends MediaBrowserService implements MethodCall
   private void handleStopRequest(String withError) {
     Log.d(TAG, "handleStopRequest: mState=" + mState + " error=" + withError );
     mState = PlaybackState.STATE_STOPPED;
+    updatePlaybackState(null);
     // let go of all resources...
     relaxResources(true);
     abandonAudioFocus();

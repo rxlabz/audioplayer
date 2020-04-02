@@ -100,6 +100,73 @@ _audioPlayerStateSubscription = audioPlayer.onPlayerStateChanged.listen((s) {
 });
 ```
 
+### Playback Keys (Android Only)
+
+The dart part of the plugin that listen for playback keys ( bluetooth/cable headphones, remotes, ...) :
+
+```dart
+
+_audioPlaybackKeysSubscription = audioPlayer.onPlaybackKeyEvent.listen((s) {
+  switch(s){
+    case PlayBackKeys.PAUSE_KEY):
+      //Handle the pause key event    
+      break;
+    case PlayBackKeys.PLAY_KEY:
+      //Handle the play key, this can also be triggered by the play pause key
+      break;
+    case PlayBackKeys.PAUSE_KEY:
+      //Handle the pause key, this can also be triggered by the play pause key
+      break;
+    case PlayBackKeys.NEXT_KEY:
+      //Handle the next key event 
+      break;
+    case PlayBackKeys.PREV_KEY:
+      //Handle the previous key event
+      break;
+    case PlayBackKeys.FAST_FORWARD_KEY:
+      //Handle the fast forward key event
+      break;
+    case PlayBackKeys.REWIND_KEY:
+      //Handle the rewind key event
+      break;
+    case PlayBackKeys.SEEK_KEY:
+      //Handle the seek key event, (not yet implemented correctly)
+      break;
+    case PlayBackKeys.STOP_KEY:
+      //Handle the stop key event
+      break;
+    }
+}, onError: (msg) {
+  //Error handling
+});
+```
+
+### Audio Focus status (Android Only)
+
+The dart part of the plugin that listens for the audio focus status change:
+
+```dart
+//...
+_audioFocusSubscription = audioPlayer.onAudioFocusChange.listen((s) {
+  switch(s){
+    case AudioFocus.AUDIO_FOCUS_GAINED:{
+      //Audio Focus has been gained
+      break;
+    }
+    case AudioFocus.AUDIO_FOCUS_LOST:{
+      //Audio Focus has been lost
+      break;
+    }
+    case AudioFocus.NO_AUDIO_FOCUS:{
+      //No Audio Focus has been issued (neutral state)
+      break;
+    }    
+  }
+}, onError: (msg) {
+  //Error handling
+});
+```
+
 Do not forget to cancel all the subscriptions when the widget is disposed.
 
 ## iOS

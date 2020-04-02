@@ -38,6 +38,14 @@ enum PlayBackKeys {
   FAST_FORWARD_KEY,
 }
 
+enum AudioFocus {
+  AUDIO_FOCUS_GAINED,
+
+  AUDIO_FOCUS_LOST,
+
+  NO_AUDIO_FOCUS
+}
+
 
 const MethodChannel _channel =
     const MethodChannel('bz.rxla.flutter/audio');
@@ -58,11 +66,18 @@ class AudioPlayer {
   final StreamController<Duration> _positionController =
       new StreamController.broadcast();
 
+  final StreamController<AudioFocus> _audioFocusController =
+      new StreamController.broadcast();
+
+
+
   AudioPlayerState _state = AudioPlayerState.STOPPED;
   Duration _duration = const Duration();
 
   AudioPlayer() {
     _channel.setMethodCallHandler(_audioPlayerStateChange);
+    //Seeding the audioFocus with a noAudioFocus state
+    _audioFocusController.add(AudioFocus.NO_AUDIO_FOCUS);
   }
 
   /// Play a given url.
@@ -85,6 +100,10 @@ class AudioPlayer {
   Stream<AudioPlayerState> get onPlayerStateChanged => _playerStateController.stream;
 
   Stream<PlayBackKeys> get onPlaybackKeyEvent => _playerPlaybackKeys.stream;
+
+  /// Stream for AudioFocus
+  Stream<AudioFocus> get onAudioFocusChange => _audioFocusController.stream;
+
 
   /// Reports what the player is currently doing.
   AudioPlayerState get state => _state;
@@ -163,6 +182,12 @@ class AudioPlayer {
         break;
       case "audio.onKeyStop":
         _playerPlaybackKeys.add(PlayBackKeys.STOP_KEY);
+        break;
+      case "audio.onAudioFocusGained":
+        _audioFocusController.add(AudioFocus.AUDIO_FOCUS_GAINED);
+        break;
+      case "audio.onAudioFocusLost":
+        _audioFocusController.add(AudioFocus.AUDIO_FOCUS_LOST);
         break;
       default:
         throw new ArgumentError('Unknown method ${call.method} ');
