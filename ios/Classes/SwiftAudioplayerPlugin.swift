@@ -1,10 +1,10 @@
 import AVFoundation
 import AVKit
 
-#if TARGET_OS_IPHONE
+#if os(iOS)
     import Flutter
     import UIKit
-#else
+#elseif os(macOS)
     import FlutterMacOS
 #endif
 
@@ -15,13 +15,13 @@ public class SwiftAudioplayerPlugin: NSObject, FlutterPlugin {
     var lastUrl: String! = ""
     var isPlaying: Bool = false
     var observers: [Any] = []
-    var timeobservers: [Any] = []
+    var timeObservers: [Any] = []
     var _channel: FlutterMethodChannel
     @objc var player: AVPlayer?
     var playerItem: AVPlayerItem?
 
     public static func register(with registrar: FlutterPluginRegistrar) {
-        let channel = FlutterMethodChannel(name: CHANNEL_NAME, binaryMessenger: registrar.messenger)
+        let channel = FlutterMethodChannel(name: CHANNEL_NAME, binaryMessenger: registrar.messenger())
         let instance = SwiftAudioplayerPlugin(channel: channel)
         registrar.addMethodCallDelegate(instance, channel: channel)
     }
