@@ -10,8 +10,8 @@ import 'package:path_provider/path_provider.dart';
 
 typedef void OnError(Exception exception);
 
-const kUrl = "http://ccrma.stanford.edu/~jos/mp3/bachfugue.mp3";
-const kUrl2 = "http://ccrma.stanford.edu/~jos/mp3/pno-cs.mp3";
+const kUrl =
+    "https://www.mediacollege.com/downloads/sound-effects/nature/forest/rainforest-ambient.mp3";
 
 void main() {
   runApp(MaterialApp(home: Scaffold(body: AudioApp())));
@@ -216,8 +216,10 @@ class _AudioAppState extends State<AudioApp> {
                 ? Container()
                 : Slider(
                     value: position?.inMilliseconds?.toDouble() ?? 0.0,
-                    onChanged: (double value) =>
-                        audioPlayer.seek((value / 1000).roundToDouble()),
+                    onChanged: (double value) {
+                      print('onSeek... $value');
+                      return audioPlayer.seek((value / 1000).roundToDouble());
+                    },
                     min: 0.0,
                     max: duration.inMilliseconds.toDouble()),
             if (position != null) _buildMuteButtons(),
