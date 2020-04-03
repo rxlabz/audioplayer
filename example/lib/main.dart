@@ -197,58 +197,52 @@ class _AudioAppState extends State<AudioApp> {
                 icon: Icon(Icons.play_arrow),
                 color: Colors.cyan,
               ),
-              if (position != null)
-                IconButton(
-                  onPressed: isPlaying ? () => pause() : null,
-                  iconSize: 64.0,
-                  icon: Icon(Icons.pause),
-                  color: Colors.cyan,
-                ),
-              if (position != null)
-                IconButton(
-                  onPressed: isPlaying || isPaused ? () => stop() : null,
-                  iconSize: 64.0,
-                  icon: Icon(Icons.stop),
-                  color: Colors.cyan,
-                ),
+              IconButton(
+                onPressed: isPlaying ? () => pause() : null,
+                iconSize: 64.0,
+                icon: Icon(Icons.pause),
+                color: Colors.cyan,
+              ),
+              IconButton(
+                onPressed: isPlaying || isPaused ? () => stop() : null,
+                iconSize: 64.0,
+                icon: Icon(Icons.stop),
+                color: Colors.cyan,
+              ),
             ]),
-            duration == null
-                ? Container()
-                : Slider(
-                    value: position?.inMilliseconds?.toDouble() ?? 0.0,
-                    onChanged: (double value) {
-                      print('onSeek... $value');
-                      return audioPlayer.seek((value / 1000).roundToDouble());
-                    },
-                    min: 0.0,
-                    max: duration.inMilliseconds.toDouble()),
+            if (duration != null)
+              Slider(
+                  value: position?.inMilliseconds?.toDouble() ?? 0.0,
+                  onChanged: (double value) {
+                    return audioPlayer.seek((value / 1000).roundToDouble());
+                  },
+                  min: 0.0,
+                  max: duration.inMilliseconds.toDouble()),
             if (position != null) _buildMuteButtons(),
             if (position != null) _buildProgressView()
           ],
         ),
       );
 
-  Row _buildProgressView() {
-    return Row(mainAxisSize: MainAxisSize.min, children: [
-      Padding(
-        padding: EdgeInsets.all(12.0),
-        child: CircularProgressIndicator(
-          value: position != null && position.inMilliseconds > 0
-              ? (position?.inMilliseconds?.toDouble() ?? 0.0) /
-                  (duration?.inMilliseconds?.toDouble() ?? 0.0)
-              : 0.0,
-          valueColor: AlwaysStoppedAnimation(Colors.cyan),
-          backgroundColor: Colors.grey.shade400,
+  Row _buildProgressView() => Row(mainAxisSize: MainAxisSize.min, children: [
+        Padding(
+          padding: EdgeInsets.all(12.0),
+          child: CircularProgressIndicator(
+            value: position != null && position.inMilliseconds > 0
+                ? (position?.inMilliseconds?.toDouble() ?? 0.0) /
+                    (duration?.inMilliseconds?.toDouble() ?? 0.0)
+                : 0.0,
+            valueColor: AlwaysStoppedAnimation(Colors.cyan),
+            backgroundColor: Colors.grey.shade400,
+          ),
         ),
-      ),
-      Text(
-        position != null
-            ? "${positionText ?? ''} / ${durationText ?? ''}"
-            : duration != null ? durationText : '',
-        style: TextStyle(fontSize: 24.0),
-      )
-    ]);
-  }
+        Text(
+          position != null
+              ? "${positionText ?? ''} / ${durationText ?? ''}"
+              : duration != null ? durationText : '',
+          style: TextStyle(fontSize: 24.0),
+        )
+      ]);
 
   Row _buildMuteButtons() {
     return Row(
