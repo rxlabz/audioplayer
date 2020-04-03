@@ -1,6 +1,6 @@
 # AudioPlayer
 
-A Flutter audio plugin (Swift/Java) to play remote or local audio files on iOS / Android / MacOS / Web.
+A Flutter audio plugin (Swift/Java) to play remote or local audio files on iOS / Android / MacOS and Web.
 
 [Online demo](https://rxlabz.github.io/audioplayer/)
 
@@ -30,7 +30,7 @@ To use this plugin :
   dependencies:
     flutter:
       sdk: flutter
-    audioplayer: 0.7.0
+    audioplayer: 0.8.0
     audioplayer_web: 0.7.0
 ```
 

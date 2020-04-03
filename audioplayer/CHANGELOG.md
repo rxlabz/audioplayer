@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.8.0
+- Android : new FlutterPlugin API & AndroidX migration
+
 ## 0.7.0
 - add Web support
 
