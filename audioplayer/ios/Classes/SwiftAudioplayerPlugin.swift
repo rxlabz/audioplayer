@@ -66,6 +66,16 @@ public class SwiftAudioplayerPlugin: NSObject, FlutterPlugin {
     }
 
     func play(url: String!, isLocal: Bool) {
+        //Bigining of Edit
+        do {
+            try AVAudioSession.sharedInstance().setCategory(AVAudioSession.Category.playback, options: AVAudioSession.CategoryOptions.defaultToSpeaker)
+                   NSLog("Playback OK")
+                   try AVAudioSession.sharedInstance().setActive(true)
+                   NSLog("Session is Active")
+               } catch {
+                   NSLog("ERROR: CANNOT PLAY MUSIC IN BACKGROUND. Message from code: \"\(error)\"")
+               }
+        //End of Edit
         if url != lastUrl {
             playerItem?.removeObserver(self, forKeyPath: #keyPath(player.currentItem.status))
 
