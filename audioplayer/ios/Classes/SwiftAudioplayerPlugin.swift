@@ -93,7 +93,7 @@ public class SwiftAudioplayerPlugin: NSObject, FlutterPlugin {
                 // remove it when player is paused or stopped.
                 let interval = CMTime(seconds: 0.2, preferredTimescale: CMTimeScale(NSEC_PER_SEC))
                 let timeObserver = player!.addPeriodicTimeObserver(forInterval: interval, queue: nil, using: onTimeInterval)
-                timeobservers.append(timeObserver)
+                timeObservers.append(timeObserver)
             }
 
             // is sound ready
@@ -164,7 +164,7 @@ public class SwiftAudioplayerPlugin: NSObject, FlutterPlugin {
     }
 
     deinit {
-        for ob in timeobservers {
+        for ob in timeObservers {
             player?.removeTimeObserver(ob)
         }
         for ob in observers {
