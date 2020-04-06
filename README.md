@@ -30,8 +30,8 @@ To use this plugin :
   dependencies:
     flutter:
       sdk: flutter
-    audioplayer: 0.8.0
-    audioplayer_web: 0.7.0
+    audioplayer: 0.8.1
+    audioplayer_web: 0.7.1
 ```
 
 - Instantiate an AudioPlayer instance
