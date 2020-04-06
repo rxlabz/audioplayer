@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.8.1
+- iOS : enable audio output to speakers thanks @mhatout
+- fixes iOS 'timeobservers' typo thanks @athornz
+
 ## 0.8.0
 - Android : new FlutterPlugin API & AndroidX migration
 

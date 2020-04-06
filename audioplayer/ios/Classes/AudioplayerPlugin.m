@@ -9,7 +9,7 @@
 #endif
 
 @implementation AudioplayerPlugin
-+ (void)registerWithRegistrar:(NSObject<FlutterPluginRegistrar> *)registrar {
++ (void)registerWithRegistrar:(NSObject<FlutterPluginRegistrar>*)registrar {
   [SwiftAudioplayerPlugin registerWithRegistrar:registrar];
 }
 @end

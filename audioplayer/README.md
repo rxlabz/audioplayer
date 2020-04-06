@@ -85,7 +85,7 @@ Do not forget to cancel all the subscriptions when the widget is disposed.
 
 ## iOS
 
-## :warning: iOS App Transport Security
+### :warning: iOS App Transport Security
 
 By default iOS forbids loading from non-https url. To cancel this restriction edit your .plist and add :
 
@@ -96,6 +96,11 @@ By default iOS forbids loading from non-https url. To cancel this restriction ed
     <true/>
 </dict>
 ```
+
+### Background mode
+
+cf. [enable background audio](https://developer.apple.com/documentation/avfoundation/media_assets_playback_and_editing/creating_a_basic_video_player_ios_and_tvos/enabling_background_audio)
+
 ## MacOS
 
 Add this to entitlements files ( cf. [DebugProfile.entitlements](example/macos/Runner/DebugProfile.entitlements) )

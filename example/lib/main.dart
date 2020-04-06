@@ -172,10 +172,11 @@ class _AudioAppState extends State<AudioApp> {
                       onPressed: () => _loadFile(),
                       child: Text('Download'),
                     ),
-                    RaisedButton(
-                      onPressed: () => _playLocal(),
-                      child: Text('play local'),
-                    ),
+                    if (localFilePath != null)
+                      RaisedButton(
+                        onPressed: () => _playLocal(),
+                        child: Text('play local'),
+                      ),
                   ],
                 ),
               ),

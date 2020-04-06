@@ -1,5 +1,5 @@
 #
-# To learn more about a Podspec see http://guides.cocoapods.org/syntax/podspec.html
+# To learn more about a Podspec see http://guides.cocoapods.org/syntax/podspec.html.
 # Run `pod lib lint audioplayer.podspec' to validate before publishing.
 #
 Pod::Spec.new do |s|
@@ -21,4 +21,3 @@ A new flutter plugin project.
   s.pod_target_xcconfig = { 'DEFINES_MODULE' => 'YES', 'VALID_ARCHS[sdk=iphonesimulator*]' => 'x86_64' }
   s.swift_version = '5.0'
 end
-
