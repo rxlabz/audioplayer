@@ -157,7 +157,7 @@ class _AudioAppState extends State<AudioApp> {
           children: [
             Text(
               'Flutter Audioplayer',
-              style: textTheme.headline6,
+              style: textTheme.headline,
             ),
             Material(child: _buildPlayer()),
             if (!kIsWeb)
