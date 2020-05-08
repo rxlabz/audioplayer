@@ -89,7 +89,6 @@ class AudioPlayer {
       case "audio.onStart":
         _state = AudioPlayerState.PLAYING;
         _playerStateController.add(AudioPlayerState.PLAYING);
-        print('PLAYING ${call.arguments}');
         _duration = new Duration(milliseconds: call.arguments);
         break;
       case "audio.onPause":
