@@ -88,7 +88,8 @@ class AudioplayerPlugin {
       channel.invokeMethod("audio.onComplete");
     });
     durationWatcher = player.onDurationChange.listen((event) {
-      channel.invokeMethod("audio.onStart", (player.duration * 1000).toInt());
+      final duration = player.duration != double.infinity ? player.duration : 0;
+      channel.invokeMethod("audio.onStart", (duration * 1000).toInt());
     });
     progressWatcher = player.onTimeUpdate.listen((event) {
       channel.invokeMethod(
