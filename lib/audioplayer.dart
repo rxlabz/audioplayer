@@ -124,8 +124,9 @@ class AudioPlayer {
     switch (call.method) {
       case "audio.onCurrentPosition":
 //        print('audio.onCurrentPosition: ${call.arguments}');
-        assert(_state == AudioPlayerState.PLAYING);
-        _positionController.add(new Duration(milliseconds: call.arguments));
+        if(_state == AudioPlayerState.PLAYING){
+          _positionController.add(new Duration(milliseconds: call.arguments));
+        }
         break;
       case "audio.onStart":
         _state = AudioPlayerState.PLAYING;
