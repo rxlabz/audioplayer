@@ -49,7 +49,7 @@ class AudioplayerPlugin {
         }
         currentUrl = url;
         try {
-          _play(currentUrl);
+          _play('assets/$currentUrl');
         } catch (err) {
           print('Audioplayer error : $err');
           return 0;
