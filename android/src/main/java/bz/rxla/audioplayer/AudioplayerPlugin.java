@@ -25,9 +25,12 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import io.flutter.embedding.engine.plugins.FlutterPlugin;
+import io.flutter.plugin.common.BinaryMessenger;
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
+import io.flutter.plugin.common.MethodChannel.Result;
 import io.flutter.plugin.common.PluginRegistry.Registrar;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -42,7 +45,7 @@ import androidx.media.MediaBrowserServiceCompat;
 /**
  * Android implementation for AudioPlayerPlugin.
  */
-public class AudioplayerPlugin extends MediaBrowserService implements MethodCallHandler {
+public class AudioplayerPlugin extends MediaBrowserService implements FlutterPlugin, MethodCallHandler {
   private static final String ID = "bz.rxla.flutter/audio";
   private static final String MEDIA_ROOT_ID = "root";
   private static final String TAG="AudioFocusTEST";
@@ -65,8 +68,8 @@ public class AudioplayerPlugin extends MediaBrowserService implements MethodCall
   public static final int KEYCODE_BYPASS_PLAY = KeyEvent.KEYCODE_MUTE;
   public static final int KEYCODE_BYPASS_PAUSE = KeyEvent.KEYCODE_MEDIA_RECORD;
   private Context mContext;
-  private final MethodChannel channel;
-  private final AudioManager am;
+  private MethodChannel channel;
+  private AudioManager am;
   private final Handler handler = new Handler();
   private String currentPlayingURRL;
   private boolean mAudioFocusGranted=false;
@@ -89,15 +92,32 @@ public class AudioplayerPlugin extends MediaBrowserService implements MethodCall
 
   public static void registerWith(Registrar registrar) {
     final MethodChannel channel = new MethodChannel(registrar.messenger(), ID);
-    channel.setMethodCallHandler(new AudioplayerPlugin(registrar, channel));
+    AudioplayerPlugin instance = new AudioplayerPlugin(registrar);
+    instance.initInstance(registrar.messenger(), registrar.context());
   }
 
-  private AudioplayerPlugin(Registrar registrar, MethodChannel channel) {
-    this.channel = channel;
-    channel.setMethodCallHandler(this);
+  private void initInstance(BinaryMessenger binaryMessenger, Context context) {
+    this.channel = new MethodChannel(binaryMessenger, ID);
+    this.channel.setMethodCallHandler(this);
+    am = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+  }
+
+
+  @Override
+  public void onAttachedToEngine(@NonNull FlutterPluginBinding binding) {
+    initInstance(binding.getBinaryMessenger(), binding.getApplicationContext());
+  }
+
+  @Override
+  public void onDetachedFromEngine(@NonNull FlutterPluginBinding binding) {
+    channel.setMethodCallHandler(null);
+    this.channel = null;
+    am = null;
+  }
+
+  private AudioplayerPlugin(Registrar registrar) {
     Context context = registrar.context().getApplicationContext();
     mContext=context;
-    this.am = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
 
     mOnAudioFocusChangeListener = new AudioManager.OnAudioFocusChangeListener() {
       @Override
