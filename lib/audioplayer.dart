@@ -74,15 +74,43 @@ class AudioPlayer {
   AudioPlayerState _state = AudioPlayerState.STOPPED;
   Duration _duration = const Duration();
 
-  AudioPlayer() {
+  AudioPlayer({bool useAndroidMediaControlNotifications=false, bool onlyShowNotificationWhenPlaying=false}) {
     _channel.setMethodCallHandler(_audioPlayerStateChange);
+    useNotificationMediaControls(useAndroidMediaControlNotifications, onlyShowNotificationWhenPlaying);
     //Seeding the audioFocus with a noAudioFocus state
     _audioFocusController.add(AudioFocus.NO_AUDIO_FOCUS);
   }
 
+  /// Will set whether media notification is shown or not, even if you call showNotification manually
+  Future<void> useNotificationMediaControls(bool value, bool onlyShowWhenPlaying) async{
+    return await _channel.invokeMethod('useNotification',
+        {
+          'useNotification':value,
+          'onlyShowWhenPlaying': onlyShowWhenPlaying
+        });
+  }
+
+  /// Will show the media Controls, will update it if it is shown already
+  Future<void> showNotificationMediaControls() async{
+    return await _channel.invokeMethod('showNotification');
+  }
+
+  /// Will hide the media Controls if it is shown instantly even if it is set to be used
+  Future<void> hideNotificationMediaControls() async{
+    return await _channel.invokeMethod('hideNotification');
+  }
+
   /// Play a given url.
-  Future<void> play(String url, {bool isLocal: false}) async =>
-      await _channel.invokeMethod('play', {'url': url, 'isLocal': isLocal});
+  Future<void> play(String url, {bool isLocal: false, String title,String author,String albumArt,String album}) async =>
+      await _channel.invokeMethod('play',
+          {
+            'url': url,
+            'isLocal': isLocal,
+            'title':title??"Unknown Title",
+            'author':author??"Unknown Artist",
+            'albumArt':albumArt??"",
+            'album':album??"Unknown Album"
+          });
 
   /// Pause the currently playing stream.
   Future<void> pause() async => await _channel.invokeMethod('pause');
@@ -95,6 +123,14 @@ class AudioPlayer {
 
   /// Seek to a specific position in the audio stream.
   Future<void> seek(double seconds) async => await _channel.invokeMethod('seek', seconds);
+
+  /// Set Item Data like Album art author and title.
+  Future<void> setItem({String title,String author,String albumArt,String album}) async => await _channel.invokeMethod('setItem', {
+    'title':title??"Unknown Title",
+    'author':author??"Unknown Artist",
+    'albumArt':albumArt??"",
+    'album':album??"Unknown Album"
+  });
 
   /// Stream for subscribing to player state change events.
   Stream<AudioPlayerState> get onPlayerStateChanged => _playerStateController.stream;

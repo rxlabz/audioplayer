@@ -63,7 +63,7 @@ class _AudioAppState extends State<AudioApp> {
   }
 
   void initAudioPlayer() {
-    audioPlayer = new AudioPlayer();
+    audioPlayer = new AudioPlayer(useAndroidMediaControlNotifications: true);
     _positionSubscription = audioPlayer.onAudioPositionChanged
         .listen((p) => setState(() => position = p));
 
@@ -87,7 +87,9 @@ class _AudioAppState extends State<AudioApp> {
   }
 
   Future play() async {
-    await audioPlayer.play("https://5a6872aace0ce.streamlock.net/nghevov3/vov3.stream_aac/chunklist_w981158175.m3u8");
+    await audioPlayer.play("https://5a6872aace0ce.streamlock.net/nghevov3/vov3.stream_aac/chunklist_w981158175.m3u8",
+        title: "title", album: "amlbum name", author: "authorName", albumArt: ""
+    );
     setState(() {
       playerState = PlayerState.playing;
     });
