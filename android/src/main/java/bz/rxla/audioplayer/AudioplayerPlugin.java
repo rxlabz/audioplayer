@@ -334,7 +334,7 @@ public class AudioplayerPlugin extends MediaBrowserService implements FlutterPlu
     this.onlyShowWhenPlaying=onlyShowWhenPlaying;
   }
   void hideNotification(){
-    this.useNotification=true;
+    this.notificationManager.hideNotification();
   }
 
   void playCurrentOnly(){
