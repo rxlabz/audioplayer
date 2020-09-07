@@ -496,23 +496,18 @@ public class AudioplayerPlugin extends MediaBrowserService implements FlutterPlu
         String cmd = intent.getStringExtra(CMD_NAME);
         switch (action) {
           case Strings.ACTION_PAUSE:
+          case AudioManager.ACTION_AUDIO_BECOMING_NOISY:
             pause();
-            UpdateNotificationManager();
             break;
           case Strings.ACTION_PLAY:
             playCurrentOnly();
-            UpdateNotificationManager();
             break;
           case Strings.ACTION_NEXT:
             onSkipToNext();
-            UpdateNotificationManager();
             break;
           case Strings.ACTION_PREV:
             onSkipToPrevious();
-            UpdateNotificationManager();
             break;
-          case AudioManager.ACTION_AUDIO_BECOMING_NOISY:
-            pause();
         }
 
         if (PAUSE_SERVICE_CMD.equals(action)
