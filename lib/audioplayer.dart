@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/services.dart';
 
@@ -101,16 +102,26 @@ class AudioPlayer {
   }
 
   /// Play a given url.
-  Future<void> play(String url, {bool isLocal: false, String title,String author,String albumArt,String album}) async =>
-      await _channel.invokeMethod('play',
-          {
-            'url': url,
-            'isLocal': isLocal,
-            'title':title??"Unknown Title",
-            'author':author??"Unknown Artist",
-            'albumArt':albumArt??"",
-            'album':album??"Unknown Album"
-          });
+  Future<void> play(String url, {bool isLocal: false, String title,String author,String albumArt,String album}) async {
+    List<int> albumArtBytes;
+    if(albumArt!=null){
+      File bgImgFile = File(albumArt);
+      if (bgImgFile != null) {
+        albumArtBytes = bgImgFile.readAsBytesSync();
+      }
+    }
+    return await _channel.invokeMethod('play',
+        {
+          'url': url,
+          'isLocal': isLocal,
+          'title':title??"Unknown Title",
+          'author':author??"Unknown Artist",
+          'albumArt':albumArtBytes,
+          'albumArtBytesLength': albumArtBytes != null ? albumArtBytes.length : 0,
+          'album':album??"Unknown Album"
+        });
+  }
+
 
   /// Pause the currently playing stream.
   Future<void> pause() async => await _channel.invokeMethod('pause');
@@ -125,12 +136,22 @@ class AudioPlayer {
   Future<void> seek(double seconds) async => await _channel.invokeMethod('seek', seconds);
 
   /// Set Item Data like Album art author and title.
-  Future<void> setItem({String title,String author,String albumArt,String album}) async => await _channel.invokeMethod('setItem', {
-    'title':title??"Unknown Title",
-    'author':author??"Unknown Artist",
-    'albumArt':albumArt??"",
-    'album':album??"Unknown Album"
-  });
+  Future<void> setItem({String title,String author,String albumArt,String album}) async {
+    List<int> albumArtBytes;
+    if(albumArt!=null){
+      File bgImgFile = File(albumArt);
+      if (bgImgFile != null) {
+        albumArtBytes = bgImgFile.readAsBytesSync();
+      }
+    }
+    await _channel.invokeMethod('setItem', {
+      'title':title??"Unknown Title",
+      'author':author??"Unknown Artist",
+      'albumArt':albumArtBytes,
+      'albumArtBytesLength': albumArtBytes != null ? albumArtBytes.length : 0,
+      'album':album??"Unknown Album"
+    });
+  }
 
   /// Stream for subscribing to player state change events.
   Stream<AudioPlayerState> get onPlayerStateChanged => _playerStateController.stream;

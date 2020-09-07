@@ -7,6 +7,8 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.drawable.Icon;
 import android.media.MediaDescription;
 import android.media.MediaMetadata;
@@ -22,16 +24,11 @@ import androidx.core.app.NotificationCompat;
  * MediaSession. This is required so that the music service
  * don't get killed during playback.
  */
-public class MediaNotificationManager extends BroadcastReceiver {
+public class MediaNotificationManager{
     private static final int NOTIFICATION_ID = 412;
     private static final int REQUEST_CODE = 100;
 
-    private static final String ACTION_PAUSE = "com.example.android.musicplayercodelab.pause";
-    private static final String ACTION_PLAY = "com.example.android.musicplayercodelab.play";
-    private static final String ACTION_NEXT = "com.example.android.musicplayercodelab.next";
-    private static final String ACTION_PREV = "com.example.android.musicplayercodelab.prev";
 
-    private final AudioplayerPlugin mService;
     private Context mContext;
     private final NotificationManager mNotificationManager;
 
@@ -41,22 +38,20 @@ public class MediaNotificationManager extends BroadcastReceiver {
     private final NotificationCompat.Action mPrevAction;
 
     private boolean mStarted;
-    private NotificationManager nManager;
     private boolean cancelWhenNotPlaying;
 
     public MediaNotificationManager(AudioplayerPlugin service, Context context, boolean cancelWhenNotPlaying) {
-        mService = service;
         mContext = context;
         this.cancelWhenNotPlaying = cancelWhenNotPlaying;
         String pkg = context.getPackageName();
         PendingIntent playIntent = PendingIntent.getBroadcast(context, REQUEST_CODE,
-                new Intent(ACTION_PLAY).setPackage(pkg), PendingIntent.FLAG_CANCEL_CURRENT);
+                new Intent(Strings.ACTION_PLAY).setPackage(pkg), PendingIntent.FLAG_CANCEL_CURRENT);
         PendingIntent pauseIntent = PendingIntent.getBroadcast(context, REQUEST_CODE,
-                new Intent(ACTION_PAUSE).setPackage(pkg), PendingIntent.FLAG_CANCEL_CURRENT);
+                new Intent(Strings.ACTION_PAUSE).setPackage(pkg), PendingIntent.FLAG_CANCEL_CURRENT);
         PendingIntent nextIntent = PendingIntent.getBroadcast(context, REQUEST_CODE,
-                new Intent(ACTION_NEXT).setPackage(pkg), PendingIntent.FLAG_CANCEL_CURRENT);
+                new Intent(Strings.ACTION_NEXT).setPackage(pkg), PendingIntent.FLAG_CANCEL_CURRENT);
         PendingIntent prevIntent = PendingIntent.getBroadcast(context, REQUEST_CODE,
-                new Intent(ACTION_PREV).setPackage(pkg), PendingIntent.FLAG_CANCEL_CURRENT);
+                new Intent(Strings.ACTION_PREV).setPackage(pkg), PendingIntent.FLAG_CANCEL_CURRENT);
 
         mPlayAction = new NotificationCompat.Action(R.drawable.ic_play_arrow_white_24dp,
                 context.getString(R.string.label_play), playIntent);
@@ -67,13 +62,6 @@ public class MediaNotificationManager extends BroadcastReceiver {
         mPrevAction = new NotificationCompat.Action(R.drawable.ic_skip_previous_white_24dp,
                 context.getString(R.string.label_previous), prevIntent);
 
-        IntentFilter filter = new IntentFilter();
-        filter.addAction(ACTION_NEXT);
-        filter.addAction(ACTION_PAUSE);
-        filter.addAction(ACTION_PLAY);
-        filter.addAction(ACTION_PREV);
-
-        context.registerReceiver(this, filter);
 
 
         mNotificationManager = (NotificationManager) context
@@ -84,52 +72,18 @@ public class MediaNotificationManager extends BroadcastReceiver {
         //mNotificationManager.cancelAll();
     }
 
-    @Override
-    public void onReceive(Context context, Intent intent) {
-        final String action = intent.getAction();
-        switch (action) {
-            case ACTION_PAUSE:
-                mService.pause();
-                mService.UpdateNotificationManager();
-                break;
-            case ACTION_PLAY:
-                mService.playCurrentOnly();
-                mService.UpdateNotificationManager();
-                break;
-            case ACTION_NEXT:
-                mService.onSkipToNext();
-                mService.UpdateNotificationManager();
-                break;
-            case ACTION_PREV:
-                mService.onSkipToPrevious();
-                mService.UpdateNotificationManager();
-                break;
-        }
-    }
-
     public void hideNotification(){
-        mNotificationManager.cancel(2);
+        mNotificationManager.cancel(NOTIFICATION_ID);
     }
 
     public void update(MediaMetadata metadata, PlaybackState state, MediaSession.Token token) {
-        if (state == null || state.getState() == PlaybackState.STATE_STOPPED ||
-                state.getState() == PlaybackState.STATE_NONE) {
-            //mService.stopForeground(true);
-            try {
-                mContext.unregisterReceiver(this);
-            } catch (IllegalArgumentException ex) {
-                // ignore receiver not registered
-            }
-            //mService.stopSelf();
-            return;
-        }
         if (metadata == null) {
             return;
         }
         boolean isPlaying = state.getState() == PlaybackState.STATE_PLAYING;
         NotificationCompat.Builder notificationBuilder = (NotificationCompat.Builder) new NotificationCompat.Builder(mContext);
         MediaDescription description = metadata.getDescription();
-
+        Bitmap BmpImage = description.getIconBitmap();
         notificationBuilder
                 .setStyle(new androidx.media.app.NotificationCompat.MediaStyle()
                         .setMediaSession(MediaSessionCompat.Token.fromToken(token))
@@ -139,6 +93,7 @@ public class MediaNotificationManager extends BroadcastReceiver {
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
                 .setContentIntent(createContentIntent())
                 .setContentTitle(description.getTitle())
+                .setLargeIcon(BmpImage)
                 .setContentText(description.getSubtitle())
                 .setOngoing(isPlaying)
                 .setWhen(isPlaying ? System.currentTimeMillis() - state.getPosition() : 0)
@@ -153,10 +108,10 @@ public class MediaNotificationManager extends BroadcastReceiver {
 
 
         if (!isPlaying && this.cancelWhenNotPlaying) {
-            mNotificationManager.cancel(2);
+            mNotificationManager.cancel(NOTIFICATION_ID);
             mStarted = false;
         }else{
-            mNotificationManager.notify(2, notification);
+            mNotificationManager.notify(NOTIFICATION_ID, notification);
             mStarted = true;
         }
     }

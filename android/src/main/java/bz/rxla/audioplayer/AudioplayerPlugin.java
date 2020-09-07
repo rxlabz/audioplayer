@@ -8,6 +8,8 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.drawable.Icon;
 import android.media.AudioAttributes;
@@ -62,11 +64,14 @@ public class AudioplayerPlugin extends MediaBrowserService implements FlutterPlu
   private static final String CMD_PAUSE = "pause";
   private static final String CMD_STOP = "pause";
   private static final String CMD_PLAY = "play";
+
   // Jellybean
+
   private static String SERVICE_CMD = "com.sec.android.app.music.musicservicecommand";
   private static String PAUSE_SERVICE_CMD = "com.sec.android.app.music.musicservicecommand.pause";
   private static String PLAY_SERVICE_CMD = "com.sec.android.app.music.musicservicecommand.play";
-  // Honeycomb
+
+
   {
     if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.JELLY_BEAN) {
       SERVICE_CMD = "com.android.music.musicservicecommand";
@@ -100,20 +105,13 @@ public class AudioplayerPlugin extends MediaBrowserService implements FlutterPlu
   private List<MediaSession.QueueItem> mPlayingQueue;
   private int mCurrentIndexOnQueue;
 
-  //Notification intents
-
-  private Notification.Action mPlayAction;
-  private Notification.Action mPauseAction;
-  private Notification.Action mNextAction;
-  private Notification.Action mPrevAction;
-  private String channelID="channelNotification";
 
   //Notification item metaData
 
   private String itemTitle;
   private String itemAuthor;
   private String itemAlbum;
-  private String itemAlbumArt;
+  private byte[] itemAlbumArt;
 
   //Notification metadata
   private boolean useNotification;
@@ -221,7 +219,7 @@ public class AudioplayerPlugin extends MediaBrowserService implements FlutterPlu
         Object url = call.argument("url");
         String playTitle  = call.argument("title");
         String playAuthor  = call.argument("author");
-        String playAlbumArt  = call.argument("albumArt");
+        byte[] playAlbumArt  = call.argument("albumArt");
         String playAlbum  = call.argument("album");
         if (url instanceof String) {
           setItem(playTitle,playAuthor,playAlbum,playAlbumArt);
@@ -252,7 +250,7 @@ public class AudioplayerPlugin extends MediaBrowserService implements FlutterPlu
       case "setItem":
         String title  = call.argument("title");
         String author  = call.argument("author");
-        String albumArt  = call.argument("albumArt");
+        byte[] albumArt  = call.argument("albumArt");
         String album  = call.argument("album");
         setItem(title,author,album,albumArt);
         response.success(null);
@@ -319,7 +317,7 @@ public class AudioplayerPlugin extends MediaBrowserService implements FlutterPlu
     }
   }
 
-  void setItem(String title, String author, String album, String albumArt){
+  void setItem(String title, String author, String album, byte[] albumArt){
     this.itemTitle=title;
     this.itemAlbum=album;
     this.itemAlbumArt=albumArt;
@@ -334,7 +332,9 @@ public class AudioplayerPlugin extends MediaBrowserService implements FlutterPlu
     this.onlyShowWhenPlaying=onlyShowWhenPlaying;
   }
   void hideNotification(){
-    this.notificationManager.hideNotification();
+    if(this.notificationManager!=null){
+      this.notificationManager.hideNotification();
+    }
   }
 
   void playCurrentOnly(){
@@ -417,19 +417,23 @@ public class AudioplayerPlugin extends MediaBrowserService implements FlutterPlu
       }
 
     }
-    MediaMetadata newMetadata = new MediaMetadata.Builder()
+
+    MediaMetadata.Builder newMetadataBuilder = new MediaMetadata.Builder()
             .putString(MediaMetadata.METADATA_KEY_TITLE, this.itemTitle)
             .putString(MediaMetadata.METADATA_KEY_ALBUM, this.itemAlbum)
             .putString(MediaMetadata.METADATA_KEY_ARTIST, this.itemAuthor)
-            .putString(MediaMetadata.METADATA_KEY_AUTHOR, this.itemAuthor)
-            .putString(MediaMetadata.METADATA_KEY_ALBUM_ART_URI, this.itemAlbumArt)
-            .build();
+            .putString(MediaMetadata.METADATA_KEY_AUTHOR, this.itemAuthor);
+
+    if(this.itemAlbumArt!=null){
+      Bitmap BmpImage = BitmapFactory.decodeByteArray(this.itemAlbumArt,0,this.itemAlbumArt.length);
+      newMetadataBuilder.putBitmap(MediaMetadata.METADATA_KEY_ART, BmpImage);
+    }
 
     long position = PlaybackState.PLAYBACK_POSITION_UNKNOWN;
     if (mediaPlayer != null && mediaPlayer.isPlaying()) {
       position = mediaPlayer.getCurrentPosition();
     }
-    notificationManager.update(newMetadata,new PlaybackState.Builder().setState(mState, position, 1.0f, SystemClock.elapsedRealtime()).build(),mSession.getSessionToken());
+    notificationManager.update(newMetadataBuilder.build(),new PlaybackState.Builder().setState(mState, position, 1.0f, SystemClock.elapsedRealtime()).build(),mSession.getSessionToken());
   }
 
   private final Runnable sendData = new Runnable(){
@@ -490,6 +494,27 @@ public class AudioplayerPlugin extends MediaBrowserService implements FlutterPlu
       public void onReceive(Context context, Intent intent) {
         String action = intent.getAction();
         String cmd = intent.getStringExtra(CMD_NAME);
+        switch (action) {
+          case Strings.ACTION_PAUSE:
+            pause();
+            UpdateNotificationManager();
+            break;
+          case Strings.ACTION_PLAY:
+            playCurrentOnly();
+            UpdateNotificationManager();
+            break;
+          case Strings.ACTION_NEXT:
+            onSkipToNext();
+            UpdateNotificationManager();
+            break;
+          case Strings.ACTION_PREV:
+            onSkipToPrevious();
+            UpdateNotificationManager();
+            break;
+          case AudioManager.ACTION_AUDIO_BECOMING_NOISY:
+            pause();
+        }
+
         if (PAUSE_SERVICE_CMD.equals(action)
                 || (SERVICE_CMD.equals(action) && CMD_PAUSE.equals(cmd))) {
           if(currentPlayingURRL!=null){
@@ -500,10 +525,7 @@ public class AudioplayerPlugin extends MediaBrowserService implements FlutterPlu
                 || (SERVICE_CMD.equals(action) && CMD_PLAY.equals(cmd))) {
           pause();
         }
-          if (AudioManager.ACTION_AUDIO_BECOMING_NOISY.equals(action)) {
-              //headphones unplugged
-              pause();
-          }
+
       }
     };
 // Do the right thing when something else tries to play
@@ -513,6 +535,10 @@ public class AudioplayerPlugin extends MediaBrowserService implements FlutterPlu
       commandFilter.addAction(PAUSE_SERVICE_CMD);
       commandFilter.addAction(PLAY_SERVICE_CMD);
       commandFilter.addAction(AudioManager.ACTION_AUDIO_BECOMING_NOISY);
+      commandFilter.addAction(Strings.ACTION_NEXT);
+      commandFilter.addAction(Strings.ACTION_PAUSE);
+      commandFilter.addAction(Strings.ACTION_PLAY);
+      commandFilter.addAction(Strings.ACTION_PREV);
       mContext.registerReceiver(mIntentReceiver, commandFilter);
       mReceiverRegistered = true;
     }

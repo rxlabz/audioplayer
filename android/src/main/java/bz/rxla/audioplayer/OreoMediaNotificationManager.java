@@ -20,10 +20,7 @@ public class OreoMediaNotificationManager extends MediaNotificationManager {
     private static final int NOTIFICATION_ID = 412;
     private static final int REQUEST_CODE = 100;
     private static final String channelID ="com.bz.rxla.notificationChannel";
-    private static final String ACTION_PAUSE = "com.example.android.musicplayercodelab.pause";
-    private static final String ACTION_PLAY = "com.example.android.musicplayercodelab.play";
-    private static final String ACTION_NEXT = "com.example.android.musicplayercodelab.next";
-    private static final String ACTION_PREV = "com.example.android.musicplayercodelab.prev";
+
 
     private final AudioplayerPlugin mService;
     private Context mContext;
@@ -35,7 +32,6 @@ public class OreoMediaNotificationManager extends MediaNotificationManager {
     private final Notification.Action mPrevAction;
 
     private boolean mStarted;
-    private NotificationManager nManager;
     private boolean cancelWhenNotPlaying;
     public OreoMediaNotificationManager(AudioplayerPlugin service, Context context, boolean onlyShowWhenPlaying) {
         super(service, context, onlyShowWhenPlaying);
@@ -44,13 +40,13 @@ public class OreoMediaNotificationManager extends MediaNotificationManager {
         mContext=context;
         String pkg = context.getPackageName();
         PendingIntent playIntent = PendingIntent.getBroadcast(context, REQUEST_CODE,
-                new Intent(ACTION_PLAY).setPackage(pkg), PendingIntent.FLAG_CANCEL_CURRENT);
+                new Intent(Strings.ACTION_PLAY).setPackage(pkg), PendingIntent.FLAG_CANCEL_CURRENT);
         PendingIntent pauseIntent = PendingIntent.getBroadcast(context, REQUEST_CODE,
-                new Intent(ACTION_PAUSE).setPackage(pkg), PendingIntent.FLAG_CANCEL_CURRENT);
+                new Intent(Strings.ACTION_PAUSE).setPackage(pkg), PendingIntent.FLAG_CANCEL_CURRENT);
         PendingIntent nextIntent = PendingIntent.getBroadcast(context, REQUEST_CODE,
-                new Intent(ACTION_NEXT).setPackage(pkg), PendingIntent.FLAG_CANCEL_CURRENT);
+                new Intent(Strings.ACTION_NEXT).setPackage(pkg), PendingIntent.FLAG_CANCEL_CURRENT);
         PendingIntent prevIntent = PendingIntent.getBroadcast(context, REQUEST_CODE,
-                new Intent(ACTION_PREV).setPackage(pkg), PendingIntent.FLAG_CANCEL_CURRENT);
+                new Intent(Strings.ACTION_PREV).setPackage(pkg), PendingIntent.FLAG_CANCEL_CURRENT);
 
         mPlayAction = new Notification.Action(R.drawable.ic_play_arrow_white_24dp,
                 context.getString(R.string.label_play), playIntent);
@@ -61,13 +57,6 @@ public class OreoMediaNotificationManager extends MediaNotificationManager {
         mPrevAction = new Notification.Action(R.drawable.ic_skip_previous_white_24dp,
                 context.getString(R.string.label_previous), prevIntent);
 
-        IntentFilter filter = new IntentFilter();
-        filter.addAction(ACTION_NEXT);
-        filter.addAction(ACTION_PAUSE);
-        filter.addAction(ACTION_PLAY);
-        filter.addAction(ACTION_PREV);
-
-        context.registerReceiver(this, filter);
 
 
         mNotificationManager = (NotificationManager) context
@@ -86,7 +75,7 @@ public class OreoMediaNotificationManager extends MediaNotificationManager {
 
             int importance = NotificationManager.IMPORTANCE_LOW;
 
-            NotificationChannel mChannel = new NotificationChannel(channelID, name,importance);
+            NotificationChannel mChannel = new NotificationChannel(Strings.channelID, name,importance);
 
 // Configure the notification channel.
             mChannel.setDescription(description);
@@ -103,37 +92,8 @@ public class OreoMediaNotificationManager extends MediaNotificationManager {
         }
     }
 
-    @Override
-    public void onReceive(Context context, Intent intent) {
-        final String action = intent.getAction();
-        switch (action) {
-            case ACTION_PAUSE:
-                mService.pause();
-                break;
-            case ACTION_PLAY:
-                mService.playCurrentOnly();
-                break;
-            case ACTION_NEXT:
-                mService.onSkipToNext();
-                break;
-            case ACTION_PREV:
-                mService.onSkipToPrevious();
-                break;
-        }
-    }
 
     public void update(MediaMetadata metadata, PlaybackState state, MediaSession.Token token) {
-        if (state == null || state.getState() == PlaybackState.STATE_STOPPED ||
-                state.getState() == PlaybackState.STATE_NONE) {
-            //mService.stopForeground(true);
-            try {
-                mContext.unregisterReceiver(this);
-            } catch (IllegalArgumentException ex) {
-                // ignore receiver not registered
-            }
-            //mService.stopSelf();
-            return;
-        }
         if (metadata == null) {
             return;
         }
@@ -146,7 +106,7 @@ public class OreoMediaNotificationManager extends MediaNotificationManager {
                         .setMediaSession(token)
                         .setShowActionsInCompactView(0, 1, 2))
                 .setColor(mContext.getResources().getColor(R.color.notification_bg))
-                .setChannelId(channelID)
+                .setChannelId(Strings.channelID)
                 .setSmallIcon(R.drawable.ic_notification)
                 .setVisibility(Notification.VISIBILITY_PUBLIC)
                 .setContentIntent(createContentIntent())
@@ -173,10 +133,10 @@ public class OreoMediaNotificationManager extends MediaNotificationManager {
         Notification notification = notificationBuilder.build();
 
         if (!isPlaying && this.cancelWhenNotPlaying) {
-            mNotificationManager.cancel(2);
+            mNotificationManager.cancel(NOTIFICATION_ID);
             mStarted = false;
         }else{
-            mNotificationManager.notify(2, notification);
+            mNotificationManager.notify(NOTIFICATION_ID, notification);
             mStarted = true;
         }
     }
