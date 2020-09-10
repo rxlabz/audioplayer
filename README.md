@@ -45,30 +45,37 @@ To use this plugin :
 
 ```dart
 //...
-AudioPlayer audioPlugin = new AudioPlayer();
+/// The useAndroidMediaControlNotifications argument sets whether to show the notification or hide it completely
+/// The onlyShowNotificationWhenPlaying argument sets whether to show the notification or hide it based on the current state pf play : show only if playing
+AudioPlayer audioPlugin = new AudioPlayer({bool useAndroidMediaControlNotifications=false, bool onlyShowNotificationWhenPlaying=false});
 //...
 ```
 
 ### Player Controls
 
 ```dart
-Future<void> play() async {
-  await audioPlayer.play(kUrl);
-  setState(() => playerState = PlayerState.playing);
-}
+/// Will play the item given in url section, if metaData is passed it will also show on the native
+/// android media controls 
+audioPlayer.play(url, {title, author, albumArt, album});
 
-Future<void> pause() async {
-  await audioPlayer.pause();
-  setState(() => playerState = PlayerState.paused);
-}
+/// Will pause the audio Play
+audioPlayer.pause();
 
-Future<void> stop() async {
-  await audioPlayer.stop();
-  setState(() {
-    playerState = PlayerState.stopped;
-    position = new Duration();
-  });
-}
+/// Will stop the audio Play
+await audioPlayer.stop();
+
+/// Will set the metadata of the song if given, without playing the media passed in the url
+audioPlayer.setItem({String title,String author,String albumArt,String album, String uri})
+
+/// Will set whether media notification is shown or not, even if you call showNotification manually
+/// The arguments are the same as the Constructor arguments
+Future<void> useNotificationMediaControls(bool value, bool onlyShowWhenPlaying);
+
+/// Will show the media Controls, will update it if it is shown already
+Future<void> showNotificationMediaControls();
+
+/// Will hide the media Controls if it is shown instantly even if it is set to be used
+Future<void> hideNotificationMediaControls();
 
 ```
 

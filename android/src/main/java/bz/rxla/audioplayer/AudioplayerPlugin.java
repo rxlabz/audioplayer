@@ -222,7 +222,7 @@ public class AudioplayerPlugin extends MediaBrowserService implements FlutterPlu
         byte[] playAlbumArt  = call.argument("albumArt");
         String playAlbum  = call.argument("album");
         if (url instanceof String) {
-          setItem(playTitle,playAuthor,playAlbum,playAlbumArt);
+          setItem(playTitle,playAuthor,playAlbum,playAlbumArt,(String) url);
           play((String) url);
         } else {
           play("");
@@ -248,11 +248,12 @@ public class AudioplayerPlugin extends MediaBrowserService implements FlutterPlu
         response.success(null);
         break;
       case "setItem":
+        String itemUri  = call.argument("uri");
         String title  = call.argument("title");
         String author  = call.argument("author");
         byte[] albumArt  = call.argument("albumArt");
         String album  = call.argument("album");
-        setItem(title,author,album,albumArt);
+        setItem(title,author,album,albumArt,itemUri);
         response.success(null);
         break;
       case "useNotification":
@@ -317,11 +318,12 @@ public class AudioplayerPlugin extends MediaBrowserService implements FlutterPlu
     }
   }
 
-  void setItem(String title, String author, String album, byte[] albumArt){
+  void setItem(String title, String author, String album, byte[] albumArt, String itemUri){
     this.itemTitle=title;
     this.itemAlbum=album;
     this.itemAlbumArt=albumArt;
     this.itemAuthor=author;
+    this.currentPlayingURRL=itemUri;
   }
 
   void showNotification(){

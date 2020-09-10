@@ -136,7 +136,7 @@ class AudioPlayer {
   Future<void> seek(double seconds) async => await _channel.invokeMethod('seek', seconds);
 
   /// Set Item Data like Album art author and title.
-  Future<void> setItem({String title,String author,String albumArt,String album}) async {
+  Future<void> setItem({String title,String author,String albumArt,String album, String uri}) async {
     List<int> albumArtBytes;
     if(albumArt!=null){
       File bgImgFile = File(albumArt);
@@ -149,7 +149,8 @@ class AudioPlayer {
       'author':author??"Unknown Artist",
       'albumArt':albumArtBytes,
       'albumArtBytesLength': albumArtBytes != null ? albumArtBytes.length : 0,
-      'album':album??"Unknown Album"
+      'album':album??"Unknown Album",
+      "uri":uri
     });
   }
 
