@@ -13,6 +13,7 @@ A Flutter audio plugin (ObjC/Java) to play remote or local audio files
   - [x] seek
   - [x] mute
 - [x] Android ONLY
+    - [x] Native Notification Controls
     - [x] music session with controls (50% done)
         - [x] music session creation
         - [x] play, pause, stop, seek controls
@@ -22,7 +23,6 @@ A Flutter audio plugin (ObjC/Java) to play remote or local audio files
     - [x] audioFocus management
         - [x] requesting focus
         - [x] focus loss management
-    
 
 ## Usage
 
