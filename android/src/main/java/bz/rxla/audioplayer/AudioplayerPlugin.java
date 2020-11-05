@@ -119,7 +119,7 @@ public class AudioplayerPlugin extends MediaBrowserService implements FlutterPlu
 
   public static void registerWith(Registrar registrar) {
     final MethodChannel channel = new MethodChannel(registrar.messenger(), ID);
-    AudioplayerPlugin instance = new AudioplayerPlugin(registrar);
+    AudioplayerPlugin instance = new AudioplayerPlugin();
     instance.initInstance(registrar.messenger(), registrar.context());
   }
 
@@ -127,25 +127,8 @@ public class AudioplayerPlugin extends MediaBrowserService implements FlutterPlu
     this.channel = new MethodChannel(binaryMessenger, ID);
     this.channel.setMethodCallHandler(this);
     am = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
-  }
-
-
-  @Override
-  public void onAttachedToEngine(@NonNull FlutterPluginBinding binding) {
-    initInstance(binding.getBinaryMessenger(), binding.getApplicationContext());
-  }
-
-  @Override
-  public void onDetachedFromEngine(@NonNull FlutterPluginBinding binding) {
-    channel.setMethodCallHandler(null);
-    this.channel = null;
-    am = null;
-  }
-
-  private AudioplayerPlugin(Registrar registrar) {
-    Context context = registrar.context().getApplicationContext();
     mContext=context;
-    mNotificationManager = (NotificationManager) context
+    mNotificationManager = (NotificationManager) mContext
             .getSystemService(Context.NOTIFICATION_SERVICE);
     mOnAudioFocusChangeListener = new AudioManager.OnAudioFocusChangeListener() {
       @Override
@@ -189,6 +172,23 @@ public class AudioplayerPlugin extends MediaBrowserService implements FlutterPlu
     };
     setupBroadcastReceiver();
     startSession(mContext);
+  }
+
+
+  @Override
+  public void onAttachedToEngine(@NonNull FlutterPluginBinding binding) {
+    initInstance(binding.getBinaryMessenger(), binding.getApplicationContext());
+  }
+
+  @Override
+  public void onDetachedFromEngine(@NonNull FlutterPluginBinding binding) {
+    channel.setMethodCallHandler(null);
+    this.channel = null;
+    am = null;
+  }
+
+  public AudioplayerPlugin() {
+    // Constructor is now just a shell to call from the plugin registrant before being attached to engine
   }
 
   // On destroy method :

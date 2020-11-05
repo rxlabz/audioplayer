@@ -104,7 +104,7 @@ class AudioPlayer {
   /// Play a given url.
   Future<void> play(String url, {bool isLocal: false, String title,String author,String albumArt,String album}) async {
     List<int> albumArtBytes;
-    if(albumArt!=null){
+    if(albumArt!=null && albumArt!=""){
       File bgImgFile = File(albumArt);
       if (bgImgFile != null) {
         albumArtBytes = bgImgFile.readAsBytesSync();
