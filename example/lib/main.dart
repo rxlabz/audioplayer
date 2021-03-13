@@ -20,6 +20,11 @@ void main() {
 enum PlayerState { stopped, playing, paused }
 
 class AudioApp extends StatefulWidget {
+  
+  const AudioApp({
+    Key key,
+  }) : super(key: key);
+  
   @override
   _AudioAppState createState() => _AudioAppState();
 }
