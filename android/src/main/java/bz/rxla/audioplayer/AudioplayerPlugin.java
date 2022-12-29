@@ -105,6 +105,8 @@ public class AudioplayerPlugin extends MediaBrowserService implements FlutterPlu
   private List<MediaSession.QueueItem> mPlayingQueue;
   private int mCurrentIndexOnQueue;
 
+  private String randomStirng = "qsdsqdqdqsd";
+
 
   //Notification item metaData
 
@@ -118,7 +120,6 @@ public class AudioplayerPlugin extends MediaBrowserService implements FlutterPlu
   private boolean onlyShowWhenPlaying;
 
   public static void registerWith(Registrar registrar) {
-    final MethodChannel channel = new MethodChannel(registrar.messenger(), ID);
     AudioplayerPlugin instance = new AudioplayerPlugin();
     instance.initInstance(registrar.messenger(), registrar.context());
   }
@@ -177,7 +178,7 @@ public class AudioplayerPlugin extends MediaBrowserService implements FlutterPlu
 
   @Override
   public void onAttachedToEngine(@NonNull FlutterPluginBinding binding) {
-    initInstance(binding.getBinaryMessenger(), binding.getApplicationContext());
+    this.initInstance(binding.getBinaryMessenger(), binding.getApplicationContext());
   }
 
   @Override
@@ -185,6 +186,9 @@ public class AudioplayerPlugin extends MediaBrowserService implements FlutterPlu
     channel.setMethodCallHandler(null);
     this.channel = null;
     am = null;
+    mSession.release();
+    handleStopRequest(null);
+    unSetupBroadcastReceiver();
   }
 
   public AudioplayerPlugin() {
@@ -196,9 +200,6 @@ public class AudioplayerPlugin extends MediaBrowserService implements FlutterPlu
 
   @Override
   public void onDestroy() {
-    mSession.release();
-    handleStopRequest(null);
-    unSetupBroadcastReceiver();
     super.onDestroy();
   }
 
@@ -549,10 +550,10 @@ public class AudioplayerPlugin extends MediaBrowserService implements FlutterPlu
 
   @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
   private void startSession(Context context){
-    mSession = new MediaSession(context, "MusicService");
-    setSessionToken(mSession.getSessionToken());
-    mSession.setCallback(new MediaSession.Callback() {
 
+    this.mSession = new MediaSession(context, "MusicService");
+    setSessionToken(this.mSession.getSessionToken());
+    this.mSession.setCallback(new MediaSession.Callback() {
       @Override
       public void onPlay() {
         Log.d(TAG, "play");
@@ -591,8 +592,6 @@ public class AudioplayerPlugin extends MediaBrowserService implements FlutterPlu
         //Will be implemented as an event to the plugin side
           channel.invokeMethod("audio.onKeySkipToNext", true);
       }
-
-
 
       @Override
       public boolean onMediaButtonEvent(@NonNull Intent mediaButtonIntent) {

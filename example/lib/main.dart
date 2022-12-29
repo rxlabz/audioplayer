@@ -24,12 +24,12 @@ class AudioApp extends StatefulWidget {
 }
 
 class _AudioAppState extends State<AudioApp> {
-  Duration duration;
-  Duration position;
+  Duration ?duration;
+  Duration ?position;
 
-  AudioPlayer audioPlayer;
+  AudioPlayer ?audioPlayer;
 
-  String localFilePath;
+  String ?localFilePath;
 
   PlayerState playerState = PlayerState.stopped;
 
@@ -43,9 +43,9 @@ class _AudioAppState extends State<AudioApp> {
 
   bool isMuted = false;
 
-  StreamSubscription _positionSubscription;
-  StreamSubscription _audioPlayerStateSubscription;
-  StreamSubscription _audioFocusSubscription;
+  StreamSubscription ?_positionSubscription;
+  StreamSubscription ?_audioPlayerStateSubscription;
+  StreamSubscription ?_audioFocusSubscription;
 
   @override
   void initState() {
@@ -55,22 +55,22 @@ class _AudioAppState extends State<AudioApp> {
 
   @override
   void dispose() {
-    _positionSubscription.cancel();
-    _audioPlayerStateSubscription.cancel();
-    _audioFocusSubscription.cancel();
-    audioPlayer.stop();
+    _positionSubscription?.cancel();
+    _audioPlayerStateSubscription?.cancel();
+    _audioFocusSubscription?.cancel();
+    audioPlayer?.stop();
     super.dispose();
   }
 
   void initAudioPlayer() {
     audioPlayer = new AudioPlayer(useAndroidMediaControlNotifications: true);
-    _positionSubscription = audioPlayer.onAudioPositionChanged
+    _positionSubscription = audioPlayer?.onAudioPositionChanged
         .listen((p) => setState(() => position = p));
 
     _audioPlayerStateSubscription =
-        audioPlayer.onPlayerStateChanged.listen((s) {
+        audioPlayer?.onPlayerStateChanged.listen((s) {
       if (s == AudioPlayerState.PLAYING) {
-        setState(() => duration = audioPlayer.duration);
+        setState(() => duration = audioPlayer?.duration);
       } else if (s == AudioPlayerState.STOPPED) {
         onComplete();
         setState(() {
@@ -87,7 +87,7 @@ class _AudioAppState extends State<AudioApp> {
   }
 
   Future play() async {
-    await audioPlayer.play("https://5a6872aace0ce.streamlock.net/nghevov3/vov3.stream_aac/chunklist_w981158175.m3u8",
+    await audioPlayer?.play("http://www.hyperion-records.co.uk/audiotest/18%20MacCunn%20The%20Lay%20of%20the%20Last%20Minstrel%20-%20Part%202%20Final%20chorus%20O%20Caledonia!%20stern%20and%20wild.mp3",
         title: "title", album: "amlbum name", author: "authorName", albumArt: ""
     );
     setState(() {
@@ -96,17 +96,17 @@ class _AudioAppState extends State<AudioApp> {
   }
 
   Future _playLocal() async {
-    await audioPlayer.play(localFilePath, isLocal: true);
+    await audioPlayer?.play(localFilePath ?? "", isLocal: true);
     setState(() => playerState = PlayerState.playing);
   }
 
   Future pause() async {
-    await audioPlayer.pause();
+    await audioPlayer?.pause();
     setState(() => playerState = PlayerState.paused);
   }
 
   Future stop() async {
-    await audioPlayer.stop();
+    await audioPlayer?.stop();
     setState(() {
       playerState = PlayerState.stopped;
       position = new Duration();
@@ -114,7 +114,7 @@ class _AudioAppState extends State<AudioApp> {
   }
 
   Future mute(bool muted) async {
-    await audioPlayer.mute(muted);
+    await audioPlayer?.mute(muted);
     setState(() {
       isMuted = muted;
     });
@@ -124,10 +124,10 @@ class _AudioAppState extends State<AudioApp> {
     setState(() => playerState = PlayerState.stopped);
   }
 
-  Future<Uint8List> _loadFileBytes(String url, {OnError onError}) async {
+  Future<Uint8List> _loadFileBytes(String url, {OnError ?onError}) async {
     Uint8List bytes;
     try {
-      bytes = await readBytes(url);
+      bytes = await readBytes(Uri.parse(url));
     } on ClientException {
       rethrow;
     }
@@ -162,25 +162,25 @@ class _AudioAppState extends State<AudioApp> {
                   children: [
                     new Material(child: _buildPlayer()),
                     localFilePath != null
-                        ? new Text(localFilePath)
+                        ? new Text(localFilePath ?? "")
                         : new Container(),
                     new Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: new Row(
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
-                            new RaisedButton(
+                            new ElevatedButton(
                               onPressed: () => _loadFile(),
                               child: new Text('Download'),
                             ),
-                            new RaisedButton(
+                            new ElevatedButton(
                               onPressed: () => _playLocal(),
                               child: new Text('play local'),
                             ),
                           ]),
                     ),
                     StreamBuilder(
-                      stream: audioPlayer.onAudioFocusChange,
+                      stream: audioPlayer?.onAudioFocusChange,
                       builder: (context, snapshot){
                         if(snapshot.hasData){
                           return Text(snapshot.data.toString());
@@ -242,7 +242,7 @@ class _AudioAppState extends State<AudioApp> {
                     value: 1.0,
                     valueColor: new AlwaysStoppedAnimation(Colors.grey[300])),
                 new CircularProgressIndicator(
-                  value: position != null && position.inMilliseconds > 0
+                  value: position != null && (position?.inMilliseconds ?? 0) > 0
                       ? (position?.inMilliseconds?.toDouble() ?? 0.0) /
                           (duration?.inMilliseconds?.toDouble() ?? 0.0)
                       : 0.0,

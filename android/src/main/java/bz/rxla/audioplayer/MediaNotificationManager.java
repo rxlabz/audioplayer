@@ -45,13 +45,13 @@ public class MediaNotificationManager{
         this.cancelWhenNotPlaying = cancelWhenNotPlaying;
         String pkg = context.getPackageName();
         PendingIntent playIntent = PendingIntent.getBroadcast(context, REQUEST_CODE,
-                new Intent(Strings.ACTION_PLAY).setPackage(pkg), PendingIntent.FLAG_CANCEL_CURRENT);
+                new Intent(Strings.ACTION_PLAY).setPackage(pkg), PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_CANCEL_CURRENT);
         PendingIntent pauseIntent = PendingIntent.getBroadcast(context, REQUEST_CODE,
-                new Intent(Strings.ACTION_PAUSE).setPackage(pkg), PendingIntent.FLAG_CANCEL_CURRENT);
+                new Intent(Strings.ACTION_PAUSE).setPackage(pkg), PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_CANCEL_CURRENT);
         PendingIntent nextIntent = PendingIntent.getBroadcast(context, REQUEST_CODE,
-                new Intent(Strings.ACTION_NEXT).setPackage(pkg), PendingIntent.FLAG_CANCEL_CURRENT);
+                new Intent(Strings.ACTION_NEXT).setPackage(pkg), PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_CANCEL_CURRENT);
         PendingIntent prevIntent = PendingIntent.getBroadcast(context, REQUEST_CODE,
-                new Intent(Strings.ACTION_PREV).setPackage(pkg), PendingIntent.FLAG_CANCEL_CURRENT);
+                new Intent(Strings.ACTION_PREV).setPackage(pkg), PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_CANCEL_CURRENT);
 
         mPlayAction = new NotificationCompat.Action(R.drawable.ic_play_arrow_white_24dp,
                 context.getString(R.string.label_play), playIntent);
@@ -121,7 +121,7 @@ public class MediaNotificationManager{
         Intent openUI = new Intent(mContext, AudioplayerPlugin.class);
         openUI.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
         return PendingIntent.getActivity(mContext, REQUEST_CODE, openUI,
-                PendingIntent.FLAG_CANCEL_CURRENT);
+                PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_CANCEL_CURRENT);
     }
 
 }

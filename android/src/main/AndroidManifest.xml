@@ -4,6 +4,7 @@
   android:versionName="0.1.0">
     <application>
         <service android:name=".AudioplayerPlugin"
+            android:exported="true"
             android:label="MediaService" >
             <intent-filter>
                 <action android:name="android.media.browse.MediaBrowserService" />
