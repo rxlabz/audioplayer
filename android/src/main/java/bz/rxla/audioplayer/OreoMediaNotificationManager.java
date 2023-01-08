@@ -9,11 +9,13 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Color;
+import android.graphics.Bitmap;
 import android.media.MediaDescription;
 import android.media.MediaMetadata;
 import android.media.session.MediaSession;
 import android.media.session.PlaybackState;
 import android.os.Build;
+import android.content.pm.PackageManager;
 
 public class OreoMediaNotificationManager extends MediaNotificationManager {
 
@@ -88,6 +90,10 @@ public class OreoMediaNotificationManager extends MediaNotificationManager {
             mChannel.enableVibration(true);
             mChannel.setVibrationPattern(new long[]{100, 200, 300, 400, 500, 400, 300, 200, 400});
 
+            if(Build.VERSION.SDK_INT > 26){
+                mChannel.setLockscreenVisibility(Notification.VISIBILITY_PUBLIC);
+            }
+
             mNotificationManager.createNotificationChannel(mChannel);
         }
     }
@@ -100,6 +106,7 @@ public class OreoMediaNotificationManager extends MediaNotificationManager {
         boolean isPlaying = state.getState() == PlaybackState.STATE_PLAYING;
         Notification.Builder notificationBuilder = new Notification.Builder(mContext);
         MediaDescription description = metadata.getDescription();
+        Bitmap albumArt = metadata.getBitmap(MediaMetadata.METADATA_KEY_ART);
 
         notificationBuilder
                 .setStyle(new Notification.MediaStyle()
@@ -112,7 +119,6 @@ public class OreoMediaNotificationManager extends MediaNotificationManager {
                 .setContentIntent(createContentIntent())
                 .setContentTitle(description.getTitle())
                 .setContentText(description.getSubtitle())
-                //.setLargeIcon(Icon.createWithResource(mService.getApplicationContext(), R.drawable.ic_notification))
                 .setOngoing(isPlaying)
                 .setWhen(isPlaying ? System.currentTimeMillis() - state.getPosition() : 0)
                 .setShowWhen(!this.cancelWhenNotPlaying || isPlaying)
@@ -130,6 +136,10 @@ public class OreoMediaNotificationManager extends MediaNotificationManager {
             notificationBuilder.addAction(mNextAction);
         }
 
+        if(albumArt != null){
+            notificationBuilder.setLargeIcon(albumArt);
+        }
+
         Notification notification = notificationBuilder.build();
 
         if (!isPlaying && this.cancelWhenNotPlaying) {
@@ -142,9 +152,10 @@ public class OreoMediaNotificationManager extends MediaNotificationManager {
     }
 
     private PendingIntent createContentIntent() {
-        Intent openUI = new Intent(mContext, AudioplayerPlugin.class);
-        openUI.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
-        return PendingIntent.getActivity(mContext, REQUEST_CODE, openUI,
+        String packageName = mContext.getPackageName();
+        PackageManager pm = mContext.getPackageManager();
+        Intent launchIntent = pm.getLaunchIntentForPackage(packageName);
+        return PendingIntent.getActivity(mContext, REQUEST_CODE, launchIntent,
                 PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_CANCEL_CURRENT);
     }
 }

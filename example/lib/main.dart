@@ -42,6 +42,7 @@ class _AudioAppState extends State<AudioApp> {
       position != null ? position.toString().split('.').first : '';
 
   bool isMuted = false;
+  bool shown = false;
 
   StreamSubscription ?_positionSubscription;
   StreamSubscription ?_audioPlayerStateSubscription;
@@ -87,7 +88,7 @@ class _AudioAppState extends State<AudioApp> {
   }
 
   Future play() async {
-    await audioPlayer?.play("http://www.hyperion-records.co.uk/audiotest/18%20MacCunn%20The%20Lay%20of%20the%20Last%20Minstrel%20-%20Part%202%20Final%20chorus%20O%20Caledonia!%20stern%20and%20wild.mp3",
+    await audioPlayer?.play("http://192.168.1.205:8181/MUUSIC/2013.09%20-%20Avril%20Lavigne%20%5BDeluxe%20Version%5D/03%2017.mp3",
         title: "title", album: "amlbum name", author: "authorName", albumArt: ""
     );
     setState(() {
@@ -119,6 +120,15 @@ class _AudioAppState extends State<AudioApp> {
       isMuted = muted;
     });
   }
+
+  Future switchNotification(bool status) async {
+    await audioPlayer?.useNotificationMediaControls(status, false);
+    await audioPlayer?.showNotificationMediaControls();
+    setState(() {
+      shown = status;
+    });
+  }
+
 
   void onComplete() {
     setState(() => playerState = PlayerState.stopped);
@@ -177,10 +187,24 @@ class _AudioAppState extends State<AudioApp> {
                               onPressed: () => _playLocal(),
                               child: new Text('play local'),
                             ),
+                            new ElevatedButton(
+                              onPressed: () => switchNotification(!shown),
+                              child: new Text('show notifications'),
+                            ),
                           ]),
                     ),
                     StreamBuilder(
                       stream: audioPlayer?.onAudioFocusChange,
+                      builder: (context, snapshot){
+                        if(snapshot.hasData){
+                          return Text(snapshot.data.toString());
+                        }else{
+                          return Container();
+                        }
+                      },
+                    ),
+                    StreamBuilder(
+                      stream: audioPlayer?.onPlaybackKeyEvent,
                       builder: (context, snapshot){
                         if(snapshot.hasData){
                           return Text(snapshot.data.toString());

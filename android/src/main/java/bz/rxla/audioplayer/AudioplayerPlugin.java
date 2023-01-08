@@ -223,6 +223,7 @@ public class AudioplayerPlugin extends MediaBrowserService implements FlutterPlu
         byte[] playAlbumArt  = call.argument("albumArt");
         String playAlbum  = call.argument("album");
         if (url instanceof String) {
+          Log.d(TAG, "play album art is "+playAlbumArt);
           setItem(playTitle,playAuthor,playAlbum,playAlbumArt,(String) url);
           play((String) url);
         } else {
@@ -429,14 +430,19 @@ public class AudioplayerPlugin extends MediaBrowserService implements FlutterPlu
 
     if(this.itemAlbumArt!=null){
       Bitmap BmpImage = BitmapFactory.decodeByteArray(this.itemAlbumArt,0,this.itemAlbumArt.length);
+      Log.d(ID, "having bmpImage");
       newMetadataBuilder.putBitmap(MediaMetadata.METADATA_KEY_ART, BmpImage);
+      newMetadataBuilder.putBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART, BmpImage);
     }
 
     long position = PlaybackState.PLAYBACK_POSITION_UNKNOWN;
     if (mediaPlayer != null && mediaPlayer.isPlaying()) {
       position = mediaPlayer.getCurrentPosition();
     }
-    notificationManager.update(newMetadataBuilder.build(),new PlaybackState.Builder().setState(mState, position, 1.0f, SystemClock.elapsedRealtime()).build(),mSession.getSessionToken());
+    PlaybackState.Builder newPlayBackStateBuilder = new PlaybackState.Builder().setState(mState, position, 1.0f, SystemClock.elapsedRealtime());
+    newPlayBackStateBuilder.setActions(PlaybackState.ACTION_SKIP_TO_PREVIOUS | PlaybackState.ACTION_SKIP_TO_NEXT);
+    PlaybackState newPlaybackState = newPlayBackStateBuilder.build();
+    notificationManager.update(newMetadataBuilder.build(),newPlaybackState,mSession.getSessionToken());
   }
 
   private final Runnable sendData = new Runnable(){
@@ -600,9 +606,11 @@ public class AudioplayerPlugin extends MediaBrowserService implements FlutterPlu
         if (event.getAction() == KeyEvent.ACTION_DOWN) {
           switch (event.getKeyCode()) {
             case KEYCODE_BYPASS_PLAY:
+            case KeyEvent.KEYCODE_MEDIA_PLAY:
               onPlay();
               break;
             case KEYCODE_BYPASS_PAUSE:
+            case KeyEvent.KEYCODE_MEDIA_PAUSE:
               onPause();
               break;
             case KeyEvent.KEYCODE_MEDIA_NEXT:
@@ -628,8 +636,6 @@ public class AudioplayerPlugin extends MediaBrowserService implements FlutterPlu
             // around this, we make PLAY and PAUSE actions use different keycodes:
             // KEYCODE_BYPASS_PLAY/PAUSE. Now if we get KEYCODE_MEDIA_PLAY/PUASE
             // we know it is actually a media button press.
-            case KeyEvent.KEYCODE_MEDIA_PLAY:
-            case KeyEvent.KEYCODE_MEDIA_PAUSE:
               // These are the "genuine" media button click events
             case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE:
             case KeyEvent.KEYCODE_HEADSETHOOK:
